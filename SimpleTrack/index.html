@@ -1,0 +1,2125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trackwright</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================== TOKENS ============================== */
+:root {
+  --font-ui: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --bg: #f4f2ec;
+  --surface: #fffefb;
+  --surface-2: #eae7dd;
+  --border: #d8d3c4;
+  --text: #1c211f;
+  --text-dim: #5c6560;
+  --text-faint: #8b9490;
+
+  --teal: #0f766e;
+  --teal-strong: #0a5951;
+  --teal-tint: #e1efec;
+  --amber: #c2790c;
+  --amber-strong: #965e07;
+  --amber-tint: #f7ead1;
+
+  --cat-1: #0f766e; /* teal   */
+  --cat-2: #c2790c; /* amber  */
+  --cat-3: #4c51bf; /* indigo */
+  --cat-4: #be4863; /* rose   */
+  --cat-5: #78802e; /* olive  */
+  --cat-6: #5b6b74; /* slate  */
+
+  --good: #2f8f5b;
+  --warn: #c2790c;
+  --bad: #b3423a;
+
+  --stage-bg: #12191a;
+  --stage-line: rgba(255,255,255,0.14);
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow-1: 0 1px 2px rgba(20,25,22,0.06), 0 1px 1px rgba(20,25,22,0.04);
+  --shadow-2: 0 4px 16px rgba(20,25,22,0.10), 0 1px 2px rgba(20,25,22,0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11181a;
+    --surface: #182223;
+    --surface-2: #1f2b2c;
+    --border: #2b3839;
+    --text: #e7ece9;
+    --text-dim: #a9b6b1;
+    --text-faint: #728380;
+
+    --teal: #35b3a6;
+    --teal-strong: #6fd3c7;
+    --teal-tint: #16302d;
+    --amber: #e2a23d;
+    --amber-strong: #f0bc6b;
+    --amber-tint: #33280f;
+
+    --cat-1: #35b3a6;
+    --cat-2: #e2a23d;
+    --cat-3: #8b90e0;
+    --cat-4: #e0839a;
+    --cat-5: #a7b15a;
+    --cat-6: #9db0b8;
+
+    --stage-bg: #05090a;
+    --stage-line: rgba(255,255,255,0.10);
+    --shadow-1: 0 1px 2px rgba(0,0,0,0.35);
+    --shadow-2: 0 4px 20px rgba(0,0,0,0.5);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11181a; --surface: #182223; --surface-2: #1f2b2c; --border: #2b3839;
+  --text: #e7ece9; --text-dim: #a9b6b1; --text-faint: #728380;
+  --teal: #35b3a6; --teal-strong: #6fd3c7; --teal-tint: #16302d;
+  --amber: #e2a23d; --amber-strong: #f0bc6b; --amber-tint: #33280f;
+  --cat-1: #35b3a6; --cat-2: #e2a23d; --cat-3: #8b90e0; --cat-4: #e0839a; --cat-5: #a7b15a; --cat-6: #9db0b8;
+  --stage-bg: #05090a; --stage-line: rgba(255,255,255,0.10);
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.35); --shadow-2: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+/* ============================== BASE ============================== */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: var(--font-ui); font-size: 15px; line-height: 1.45;
+  overscroll-behavior: none;
+}
+button, input, select { font-family: inherit; font-size: inherit; color: inherit; }
+button { cursor: pointer; }
+::selection { background: var(--teal-tint); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+a { color: var(--teal); }
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+/* ============================== APP SHELL ============================== */
+#app {
+  height: 100dvh; display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 560px;
+}
+
+/* ---- Header ---- */
+header.topbar {
+  display: flex; align-items: center; gap: 14px;
+  padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: baseline; gap: 8px; margin-right: 4px; }
+.brand .mark { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; }
+.brand .mark .dot { color: var(--amber); }
+.brand .tag { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+.topbar-group { display: flex; align-items: center; gap: 6px; }
+.topbar-sep { width: 1px; align-self: stretch; background: var(--border); margin: 2px 2px; }
+.spacer { flex: 1; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface);
+  font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap;
+  transition: background .12s, border-color .12s, transform .05s;
+}
+.btn:hover { border-color: var(--teal); }
+.btn:active { transform: translateY(1px); }
+.btn.ghost { background: transparent; border-color: transparent; }
+.btn.ghost:hover { background: var(--surface-2); border-color: transparent; }
+.btn.primary { background: var(--teal); border-color: var(--teal); color: #fff; }
+.btn.primary:hover { background: var(--teal-strong); border-color: var(--teal-strong); }
+.btn.accent { background: var(--amber); border-color: var(--amber); color: #241a05; }
+.btn.accent:hover { background: var(--amber-strong); border-color: var(--amber-strong); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn.icon { padding: 7px 9px; }
+.btn.sm { padding: 4px 8px; font-size: 12px; }
+
+select.field, input.field {
+  padding: 6px 9px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+  background: var(--surface); color: var(--text);
+}
+input.field.num { width: 76px; text-align: right; }
+label.inline { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-dim); }
+
+.theme-toggle { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; width: 30px; height: 30px; display: grid; place-items: center; }
+
+/* ---- Main layout — the stage is always maximized; controls live in
+   popovers triggered from the edge toolstrip, never in a permanent column. ---- */
+main.workarea {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---- Stage (video + canvas) ---- */
+.stage-wrap { flex: 1; position: relative; background: var(--stage-bg); overflow: hidden; min-height: 260px; }
+.stage-inner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.stage-empty { color: #7c9490; text-align: center; padding: 24px; font-size: 14px; max-width: 320px; }
+.stage-empty .btn { margin-top: 12px; }
+/* #stageMedia deliberately fills the whole stage box (not "hug the video"):
+   percentage sizing on a video inside an auto-sized flex item never resolves
+   against a definite height, so on a portrait phone video the element used
+   to render at full native resolution and overflow the stage. Filling the
+   box and letterboxing the video with object-fit gives every aspect ratio a
+   definite box to size against, and the overlay canvas + coordinate mapping
+   account for the letterbox bars (see fitCanvasToVideo/cssToVideoPx). */
+#stageMedia { position: relative; width: 100%; height: 100%; }
+#videoEl { display: block; width: 100%; height: 100%; object-fit: contain; background: var(--stage-bg); }
+#overlayCanvas { position: absolute; left: 0; top: 0; touch-action: none; }
+.mode-banner {
+  position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+  background: rgba(18,25,26,0.82); color: #eaf3f1; border: 1px solid var(--stage-line);
+  padding: 5px 12px; border-radius: 999px; font-size: 12px; display: none; align-items: center; gap: 8px;
+  backdrop-filter: blur(3px);
+}
+.mode-banner.show { display: inline-flex; }
+.mode-banner .swatch { width: 9px; height: 9px; border-radius: 50%; }
+.fps-badge {
+  position: absolute; top: 8px; right: 8px; font-size: 11px; color: #9fb3af;
+  background: rgba(18,25,26,0.7); border: 1px solid var(--stage-line); border-radius: 6px; padding: 3px 7px;
+}
+
+/* ---- Edge toolstrip — the only persistent control surface; everything
+   else lives in a popover so the video stays maximized. Sits above the
+   popover backdrop (z-index 45 > 40) so switching between panels never
+   requires closing the current one first. ---- */
+.edge-toolstrip {
+  position: absolute; top: 50%; right: 10px; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 8px; z-index: 45;
+}
+.edge-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  width: 58px; padding: 8px 4px; border-radius: 12px; cursor: pointer;
+  background: rgba(18,25,26,0.72); border: 1px solid var(--stage-line); color: #eaf3f1;
+  font-size: 10.5px; font-weight: 600; backdrop-filter: blur(3px);
+}
+.edge-btn .ico { font-size: 18px; line-height: 1; }
+.edge-btn.accent { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+/* ---- Popovers — "dock" for the smaller Ruler/Track/Numbers panels,
+   "large" (reusing the same visual treatment as the per-graph expand
+   modal below) for the Graph panel, which needs real room. ---- */
+.popover-backdrop { position: fixed; inset: 0; background: rgba(10,14,13,0.35); z-index: 40; display: none; }
+.popover-backdrop.show { display: block; }
+.popover-panel {
+  position: fixed; z-index: 41; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-2); display: none; flex-direction: column; overflow: hidden;
+}
+.popover-panel.open { display: flex; }
+.popover-panel.dock { top: 66px; right: 82px; width: min(360px, 82vw); max-height: calc(100vh - 170px); }
+.popover-panel.large { top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(96vw, 1000px); height: min(88vh, 720px); }
+.popover-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; }
+.popover-body { flex: 1; overflow-y: auto; padding: 14px; min-height: 0; }
+.popover-panel.large .popover-body { padding: 12px 16px 16px; }
+
+@media (max-width: 700px) {
+  .edge-toolstrip { right: 6px; gap: 6px; }
+  .edge-btn { width: 48px; padding: 6px 3px; font-size: 9px; }
+  .edge-btn .ico { font-size: 16px; }
+  .popover-panel.dock { right: 62px; width: min(320px, 78vw); }
+}
+
+/* ---- Transport ---- */
+.transport { background: var(--surface); border-top: 1px solid var(--border); padding: 8px 12px 10px; }
+.transport-row { display: flex; align-items: center; gap: 8px; }
+.scrub { flex: 1; -webkit-appearance: none; appearance: none; height: 26px; background: transparent; }
+.scrub::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: var(--surface-2); }
+.scrub::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px; margin-top: -6px;
+  border-radius: 50%; background: var(--teal); border: 2px solid var(--surface); box-shadow: var(--shadow-1);
+}
+.transport-readout { font-size: 12px; color: var(--text-dim); display: flex; gap: 10px; padding: 4px 2px 0; flex-wrap: wrap; }
+.transport-readout b { color: var(--text); font-weight: 600; }
+
+h3.panel-h { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); margin: 0 0 8px; font-weight: 600; }
+.card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 12px; }
+.field-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.field-row:last-child { margin-bottom: 0; }
+.field-row .label { font-size: 13px; color: var(--text-dim); }
+.readout { font-family: var(--font-mono); font-size: 12.5px; color: var(--text); }
+.help { font-size: 12px; color: var(--text-faint); margin-top: 6px; line-height: 1.5; }
+.step { display: flex; gap: 8px; font-size: 12.5px; color: var(--text-dim); margin-bottom: 6px; }
+.step .n { flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--teal-tint); color: var(--teal-strong); font-size: 10px; font-weight: 700; display: grid; place-items: center; margin-top: 1px; }
+
+/* track rows */
+.track-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); margin-bottom: 6px; }
+.track-row.active { border-color: var(--teal); box-shadow: 0 0 0 1px var(--teal) inset; }
+.swatch { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.track-row input.name { border: none; background: transparent; font-size: 13px; font-weight: 500; width: 100%; padding: 2px; border-radius: 4px; }
+.track-row input.name:focus { background: var(--surface-2); }
+.track-meta { font-size: 11px; color: var(--text-faint); flex: none; }
+.icon-btn { border: none; background: transparent; color: var(--text-faint); padding: 4px; border-radius: 4px; flex: none; }
+.icon-btn:hover { background: var(--surface-2); color: var(--text); }
+
+/* data table */
+.table-scroll { overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); max-height: 360px; }
+table.data { border-collapse: collapse; width: 100%; font-family: var(--font-mono); font-size: 12px; }
+table.data th, table.data td { padding: 5px 9px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
+table.data th { position: sticky; top: 0; background: var(--surface-2); color: var(--text-dim); font-weight: 600; text-align: right; }
+table.data td:first-child, table.data th:first-child { text-align: center; color: var(--text-faint); }
+table.data tbody tr:hover { background: var(--teal-tint); }
+
+/* graph cards */
+.graph-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; }
+.graph-head { display: flex; align-items: flex-end; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.graph-head select { max-width: 120px; }
+.axis-field { display: flex; flex-direction: column; gap: 2px; }
+.axis-cap { font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); }
+.vs-label { color: var(--text-faint); font-size: 12px; padding-bottom: 6px; }
+.graph-canvas-wrap { position: relative; background: var(--surface); }
+canvas.chart { display: block; width: 100%; height: 200px; touch-action: pan-y; }
+.graph-foot { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-top: 1px solid var(--border); flex-wrap: wrap; font-size: 12px; }
+.stats-readout { font-family: var(--font-mono); color: var(--teal-strong); font-size: 12px; }
+.fit-readout { font-family: var(--font-mono); color: var(--amber); font-size: 12px; }
+.readouts { display: flex; flex-direction: column; gap: 3px; }
+.pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); font-size: 11px; color: var(--text-dim); }
+
+.graph-head-simple { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.quick-charts { display: flex; gap: 6px; flex-wrap: wrap; }
+details.adv { border-top: 1px solid var(--border); }
+details.adv summary { cursor: pointer; padding: 7px 10px; font-size: 12px; color: var(--text-dim); font-weight: 500; list-style: none; }
+details.adv summary::-webkit-details-marker { display: none; }
+details.adv summary::before { content: '▸ '; }
+details.adv[open] summary::before { content: '▾ '; }
+
+.empty-note { font-size: 12.5px; color: var(--text-faint); text-align: center; padding: 20px 8px; }
+
+/* graph "open larger" modal — a full-view overlay rather than a real OS
+   popup window, since separate windows are unreliable both inside a
+   sandboxed Artifact viewer and in iPad Safari/Chrome's multitasking. */
+.graph-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(10,14,13,0.6); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; z-index: 60; padding: 16px;
+}
+.graph-modal-backdrop[hidden] { display: none; }
+.graph-modal {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-2); width: min(96vw, 1000px); height: min(88vh, 720px);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.graph-modal-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.graph-modal-title { font-size: 13px; font-weight: 600; }
+.graph-modal-body { flex: 1; padding: 12px 16px 16px; min-height: 0; }
+.graph-modal-body canvas.chart { height: 100%; }
+
+/* toast */
+#toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text); color: var(--bg); padding: 9px 16px; border-radius: 999px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; z-index: 50; box-shadow: var(--shadow-2); }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* file inputs hidden */
+input[type=file] { display: none; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark">Trackwright<span class="dot">.</span></span>
+      <span class="tag">Video Motion Analysis</span>
+    </div>
+
+    <div class="topbar-group">
+      <button class="btn primary icon" id="btnLoadVideo" title="Load a video file">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Load video
+      </button>
+      <input type="file" id="videoFileInput" accept="video/*">
+      <span class="readout mono" id="videoNameReadout" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;"></span>
+    </div>
+
+    <div class="topbar-sep"></div>
+
+    <div class="topbar-group">
+      <label class="inline">fps
+        <select class="field" id="fpsSelect">
+          <option value="24">24</option>
+          <option value="25">25</option>
+          <option value="29.97">29.97</option>
+          <option value="30" selected>30</option>
+          <option value="60">60</option>
+          <option value="120">120</option>
+          <option value="240">240</option>
+          <option value="custom">custom…</option>
+        </select>
+      </label>
+      <input class="field num" id="fpsCustom" type="number" min="1" step="0.01" value="30" style="display:none;">
+    </div>
+
+    <div class="topbar-sep"></div>
+
+    <div class="spacer"></div>
+
+    <div class="topbar-group">
+      <button class="btn ghost icon sm" id="btnSnapshot" title="Save current frame as PNG">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      </button>
+      <button class="btn ghost sm" id="btnSaveProject">Save project</button>
+      <button class="btn ghost sm" id="btnLoadProject">Load project</button>
+      <input type="file" id="projectFileInput" accept="application/json,.json">
+      <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+        <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="workarea">
+
+    <div class="stage-wrap" id="stageWrap">
+      <div class="stage-inner" id="stageInner">
+        <div class="stage-empty" id="stageEmpty">
+          <div style="font-size:32px;line-height:1;margin-bottom:6px;">🎬</div>
+          Load a video to get started. It works best when the camera is held still and there's a ruler or something of known length in the shot.
+          <div><button class="btn primary" id="btnLoadVideo2">Choose a video file</button></div>
+          <div id="sampleVideoRow" style="margin-top:6px; display:none;"><button class="btn ghost sm" id="btnLoadSample">Try the sample video</button></div>
+        </div>
+        <div id="stageMedia" style="display:none;">
+          <video id="videoEl" playsinline muted preload="auto"></video>
+          <canvas id="overlayCanvas"></canvas>
+          <div class="mode-banner" id="modeBanner"><span class="swatch" id="modeBannerSwatch"></span><span id="modeBannerText"></span></div>
+          <div class="fps-badge" id="fpsBadge" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="edge-toolstrip" id="edgeToolstrip">
+        <button class="edge-btn" data-panel="calibration" title="Set the ruler, start point, and tilt"><span class="ico">📏</span>Ruler</button>
+        <button class="edge-btn" data-panel="tracks" title="Add and manage tracked dots"><span class="ico">📍</span>Track</button>
+        <button class="edge-btn" data-panel="data" title="View the data table"><span class="ico">🔢</span>Numbers</button>
+        <button class="edge-btn" data-panel="graphs" title="View graphs"><span class="ico">📈</span>Graph</button>
+        <button class="edge-btn" id="btnMeasureToggle" title="Measure the distance between two points"><span class="ico">📐</span>Measure</button>
+      </div>
+    </div>
+
+    <div class="transport">
+      <div class="transport-row">
+        <button class="btn icon" id="btnFrameBack" title="Previous frame" disabled>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6l-10 6 10 6z"/></svg>
+        </button>
+        <button class="btn icon primary" id="btnPlay" title="Play / pause" disabled>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" id="playIcon"><path d="M8 5l12 7-12 7z"/></svg>
+        </button>
+        <button class="btn icon" id="btnFrameFwd" title="Next frame" disabled>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6l10 6-10 6z"/></svg>
+        </button>
+        <input type="range" class="scrub" id="scrub" min="0" max="0" value="0" step="1" disabled>
+        <select class="field" id="speedSelect" disabled style="width:72px;">
+          <option value="0.1">0.1×</option>
+          <option value="0.25">0.25×</option>
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+        </select>
+      </div>
+      <div class="transport-readout">
+        <span>frame <b class="mono" id="frameReadout">0 / 0</b></span>
+        <span>t = <b class="mono" id="timeReadout">0.000 s</b></span>
+        <span id="autoAdvanceReadout"></span>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="popover-backdrop" id="popoverBackdrop"></div>
+
+<div class="popover-panel dock" id="popover-calibration">
+  <div class="popover-head"><span>Ruler</span><div class="spacer"></div><button class="icon-btn popover-close" title="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="popover-body" id="tab-calibration"></div>
+</div>
+<div class="popover-panel dock" id="popover-tracks">
+  <div class="popover-head"><span>Track</span><div class="spacer"></div><button class="icon-btn popover-close" title="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="popover-body" id="tab-tracks"></div>
+</div>
+<div class="popover-panel dock" id="popover-data">
+  <div class="popover-head"><span>Numbers</span><div class="spacer"></div><button class="icon-btn popover-close" title="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="popover-body" id="tab-data"></div>
+</div>
+<div class="popover-panel large" id="popover-graphs">
+  <div class="popover-head"><span>Graph</span><div class="spacer"></div><button class="icon-btn popover-close" title="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="popover-body" id="tab-graphs"></div>
+</div>
+
+<div id="toast"></div>
+
+<div class="graph-modal-backdrop" id="graphModal" hidden>
+  <div class="graph-modal">
+    <div class="graph-modal-head">
+      <span class="graph-modal-title mono" id="graphModalTitle"></span>
+      <span class="stats-readout" id="graphModalStats"></span>
+      <span class="fit-readout" id="graphModalFitEq"></span>
+      <div class="spacer"></div>
+      <button class="btn sm" id="graphModalSave">Save image</button>
+      <button class="icon-btn" id="graphModalClose" title="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="graph-modal-body"><canvas class="chart" id="graphModalCanvas"></canvas></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ======================================================================
+   SECTION: MATHCORE  (calibration, timing, derivatives, curve fits)
+   ====================================================================== */
+function makeCalibration({ originPx, thetaRad, unitsPerPixel }) {
+  const c = Math.cos(thetaRad), s = Math.sin(thetaRad);
+  return {
+    originPx: { x: originPx.x, y: originPx.y },
+    thetaRad,
+    unitsPerPixel,
+    pixelToWorld(px) {
+      const dx = px.x - originPx.x;
+      const dy = px.y - originPx.y;
+      const xr = dx * c + dy * s;
+      const yr = -dx * s + dy * c;
+      return { x: xr * unitsPerPixel, y: -yr * unitsPerPixel };
+    },
+    worldToPixel(w) {
+      const xr = w.x / unitsPerPixel;
+      const yr = -w.y / unitsPerPixel;
+      const dx = xr * c - yr * s;
+      const dy = xr * s + yr * c;
+      return { x: dx + originPx.x, y: dy + originPx.y };
+    },
+  };
+}
+function calibrationFromStick(p1, p2, knownDistance, opts = {}) {
+  const dx = p2.x - p1.x, dy = p2.y - p1.y;
+  const pixelDist = Math.hypot(dx, dy);
+  if (pixelDist === 0) throw new Error('Calibration points coincide');
+  const unitsPerPixel = knownDistance / pixelDist;
+  const originPx = opts.originPx || p1;
+  const thetaRad = opts.thetaRad !== undefined ? opts.thetaRad : Math.atan2(dy, dx);
+  return makeCalibration({ originPx, thetaRad, unitsPerPixel });
+}
+function frameIndexToTime(frameIndex, fps) { return frameIndex / fps; }
+function timeToNearestFrameIndex(t, fps) { return Math.round(t * fps); }
+
+function firstDerivative(t, x) {
+  const n = t.length;
+  const v = new Array(n).fill(NaN);
+  if (n < 2) return v;
+  v[0] = (x[1] - x[0]) / (t[1] - t[0]);
+  v[n - 1] = (x[n - 1] - x[n - 2]) / (t[n - 1] - t[n - 2]);
+  for (let i = 1; i < n - 1; i++) {
+    const dt1 = t[i] - t[i - 1];
+    const dt2 = t[i + 1] - t[i];
+    v[i] = (dt1 * dt1 * x[i + 1] + (dt2 * dt2 - dt1 * dt1) * x[i] - dt2 * dt2 * x[i - 1]) /
+           (dt1 * dt2 * (dt1 + dt2));
+  }
+  return v;
+}
+function secondDerivative(t, x) {
+  const n = t.length;
+  const a = new Array(n).fill(NaN);
+  for (let i = 1; i < n - 1; i++) {
+    const dt1 = t[i] - t[i - 1];
+    const dt2 = t[i + 1] - t[i];
+    a[i] = 2 * (dt1 * x[i + 1] - (dt1 + dt2) * x[i] + dt2 * x[i - 1]) /
+           (dt1 * dt2 * (dt1 + dt2));
+  }
+  return a;
+}
+function polyFit(t, x, degree) {
+  const n = t.length;
+  const m = degree + 1;
+  const ATA = Array.from({ length: m }, () => new Array(m).fill(0));
+  const ATx = new Array(m).fill(0);
+  const rows = t.map((ti) => {
+    const row = new Array(m);
+    let p = 1;
+    for (let k = 0; k < m; k++) { row[k] = p; p *= ti; }
+    return row;
+  });
+  for (let i = 0; i < n; i++) {
+    for (let r = 0; r < m; r++) {
+      ATx[r] += rows[i][r] * x[i];
+      for (let c = 0; c < m; c++) ATA[r][c] += rows[i][r] * rows[i][c];
+    }
+  }
+  const coeffs = solveLinearSystem(ATA, ATx);
+  const predict = (ti) => {
+    let p = 1, y = 0;
+    for (let k = 0; k < m; k++) { y += coeffs[k] * p; p *= ti; }
+    return y;
+  };
+  const r2 = rSquared(t, x, predict);
+  return { coeffs, predict, r2, degree };
+}
+function solveLinearSystem(A, b) {
+  const n = b.length;
+  const M = A.map((row, i) => [...row, b[i]]);
+  for (let col = 0; col < n; col++) {
+    let pivot = col;
+    for (let r = col + 1; r < n; r++) if (Math.abs(M[r][col]) > Math.abs(M[pivot][col])) pivot = r;
+    [M[col], M[pivot]] = [M[pivot], M[col]];
+    const pv = M[col][col];
+    if (Math.abs(pv) < 1e-14) continue;
+    for (let c = col; c <= n; c++) M[col][c] /= pv;
+    for (let r = 0; r < n; r++) {
+      if (r === col) continue;
+      const f = M[r][col];
+      if (f === 0) continue;
+      for (let c = col; c <= n; c++) M[r][c] -= f * M[col][c];
+    }
+  }
+  return M.map((row) => row[n]);
+}
+function rSquared(t, x, predict) {
+  const n = x.length;
+  const mean = x.reduce((s, v) => s + v, 0) / n;
+  let ssRes = 0, ssTot = 0;
+  for (let i = 0; i < n; i++) {
+    const pred = predict(t[i]);
+    ssRes += (x[i] - pred) ** 2;
+    ssTot += (x[i] - mean) ** 2;
+  }
+  return ssTot === 0 ? 1 : 1 - ssRes / ssTot;
+}
+function sinFit(t, x, seedFreqHz) {
+  const n = t.length;
+  const mean = x.reduce((s, v) => s + v, 0) / n;
+  const amp0 = (Math.max(...x) - Math.min(...x)) / 2 || 1;
+  let w0 = seedFreqHz ? 2 * Math.PI * seedFreqHz : estimateAngularFreq(t, x);
+  let params = [amp0, w0, 0, mean];
+  const model = (p, ti) => p[0] * Math.sin(p[1] * ti + p[2]) + p[3];
+  const jac = (p, ti) => [
+    Math.sin(p[1] * ti + p[2]),
+    p[0] * Math.cos(p[1] * ti + p[2]) * ti,
+    p[0] * Math.cos(p[1] * ti + p[2]),
+    1,
+  ];
+  let lambda = 1e-3;
+  let residSSQ = sumSqResiduals(params, t, x, model);
+  for (let iter = 0; iter < 200; iter++) {
+    const JTJ = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+    const JTr = [0,0,0,0];
+    for (let i = 0; i < n; i++) {
+      const r = x[i] - model(params, t[i]);
+      const J = jac(params, t[i]);
+      for (let a = 0; a < 4; a++) {
+        JTr[a] += J[a] * r;
+        for (let b = 0; b < 4; b++) JTJ[a][b] += J[a] * J[b];
+      }
+    }
+    const A = JTJ.map((row, i) => row.map((v, j) => (i === j ? v * (1 + lambda) : v)));
+    const delta = solveLinearSystem(A, JTr);
+    const trial = params.map((p, i) => p + delta[i]);
+    const trialSSQ = sumSqResiduals(trial, t, x, model);
+    if (isFinite(trialSSQ) && trialSSQ < residSSQ) { params = trial; residSSQ = trialSSQ; lambda *= 0.7; }
+    else { lambda *= 2; }
+    if (lambda > 1e12) break;
+  }
+  if (params[0] < 0) { params[0] = -params[0]; params[2] += Math.PI; }
+  if (params[1] < 0) { params[1] = -params[1]; params[2] = -params[2]; }
+  params[2] = ((params[2] % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  const predict = (ti) => model(params, ti);
+  return { A: params[0], w: params[1], phi: params[2], C: params[3], freqHz: params[1] / (2 * Math.PI), predict, r2: rSquared(t, x, predict) };
+}
+function sumSqResiduals(p, t, x, model) {
+  let s = 0;
+  for (let i = 0; i < t.length; i++) s += (x[i] - model(p, t[i])) ** 2;
+  return s;
+}
+function estimateAngularFreq(t, x) {
+  const mean = x.reduce((s, v) => s + v, 0) / x.length;
+  const crossings = [];
+  for (let i = 1; i < x.length; i++) {
+    if ((x[i - 1] - mean) < 0 !== (x[i] - mean) < 0) {
+      const frac = (mean - x[i - 1]) / (x[i] - x[i - 1]);
+      crossings.push(t[i - 1] + frac * (t[i] - t[i - 1]));
+    }
+  }
+  if (crossings.length < 2) return (2 * Math.PI) / (t[t.length - 1] - t[0] || 1);
+  const halfPeriods = [];
+  for (let i = 1; i < crossings.length; i++) halfPeriods.push(crossings[i] - crossings[i - 1]);
+  const avgHalfPeriod = halfPeriods.reduce((s, v) => s + v, 0) / halfPeriods.length;
+  const period = avgHalfPeriod * 2;
+  return (2 * Math.PI) / period;
+}
+function bestPolyFit(t, x, maxDegree) {
+  let best = null;
+  for (let d = 1; d <= maxDegree; d++) {
+    if (t.length < d + 2) continue;
+    const f = polyFit(t, x, d);
+    if (!best || f.r2 > best.r2 + 1e-6) best = { ...f, kind: 'poly' + d };
+  }
+  return best;
+}
+
+/* ======================================================================
+   SECTION: STATE
+   ====================================================================== */
+const $ = (id) => document.getElementById(id);
+const CAT_COLORS = ['#0f766e', '#c2790c', '#4c51bf', '#be4863', '#78802e', '#5b6b74'];
+const CAT_COLORS_DARK = ['#35b3a6', '#e2a23d', '#8b90e0', '#e0839a', '#a7b15a', '#9db0b8'];
+function isDark() {
+  const t = document.documentElement.getAttribute('data-theme');
+  if (t === 'dark') return true;
+  if (t === 'light') return false;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+function catColor(i) { return (isDark() ? CAT_COLORS_DARK : CAT_COLORS)[i % 6]; }
+
+const UNIT_OPTIONS = ['m', 'cm', 'mm', 'ft', 'in'];
+
+// A "track" is a point track: one {x,y} pixel mark per frame. (An earlier
+// version also supported angle tracks; dropped to keep the app simple —
+// point tracking covers a dropped ball, a toy car, or a projectile.)
+function makeTrack(index) {
+  return {
+    id: 'trk_' + Math.random().toString(36).slice(2, 9),
+    kind: 'point',
+    name: 'Dot ' + (index + 1),
+    color: catColor(index),
+    visible: true,
+    points: {},              // frameIndex -> {x,y} pixel coords
+  };
+}
+
+const state = {
+  fps: 30,
+  videoLoaded: false,
+  videoName: '',
+  videoDuration: 0,
+  frameCount: 0,
+  currentFrame: 0,
+  playing: false,
+  playbackSpeed: 1,
+  mode: 'select', // select | track | calibrate | axes | tape
+  autoAdvance: true,
+
+  calibration: {
+    stickP1: null, stickP2: null, knownDistance: 1, unit: 'm',
+    originPx: null, thetaRad: 0,
+    pendingStickClick: null, // holds first click while awaiting second
+  },
+
+  tracks: [],
+  activeTrackId: null,
+
+  tape: { p1: null, p2: null }, // one-off distance measurement, independent of any track
+
+  graphs: [], // { id, xKey, yKey, fit: 'none'|'linear'|'quadratic'|'cubic'|'sinusoidal'|'auto', roiMin, roiMax, roiPick:null }
+
+  // display geometry of the video within the canvas (intrinsic px <-> CSS px)
+  displayRect: { scale: 1, cssW: 0, cssH: 0, vw: 0, vh: 0 },
+};
+
+function activeTrack() { return state.tracks.find((t) => t.id === state.activeTrackId) || null; }
+function fmtNum(v, d) { return (v === undefined || v === null || Number.isNaN(v)) ? '—' : v.toFixed(d === undefined ? 4 : d); }
+function toast(msg) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+/* ======================================================================
+   SECTION: SAVE / DOWNLOAD HELPER (capability-aware with plain fallback)
+   ====================================================================== */
+let _downloadsCap = undefined; // undefined = not checked yet, null = unavailable
+async function getDownloadsCapability() {
+  if (_downloadsCap !== undefined) return _downloadsCap;
+  try {
+    if (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.use === 'function') {
+      _downloadsCap = await window.claude.use('downloads');
+    } else {
+      _downloadsCap = null;
+    }
+  } catch (e) {
+    _downloadsCap = null;
+  }
+  return _downloadsCap;
+}
+
+// Saves text/blob content as a file. Tries the platform "downloads"
+// capability first (works when this page is opened as a published
+// Artifact); falls back to a plain <a download> blob link, which is what
+// makes saving work when this same HTML file is self-hosted or opened
+// directly in Safari/Chrome — the normal way this app is meant to run.
+async function saveFile(filename, data, mime) {
+  const cap = await getDownloadsCapability();
+  if (cap) {
+    try {
+      await cap.save({ filename, data });
+      toast('Saved "' + filename + '"');
+      return true;
+    } catch (e) {
+      if (e && e.code === 'declined') { return false; }
+      // fall through to blob-link fallback for any other failure
+    }
+  }
+  try {
+    const blob = (data instanceof Blob) ? data : new Blob([data], { type: mime || 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast('Downloaded "' + filename + '"');
+    return true;
+  } catch (e) {
+    toast('Could not save the file — try "Copy" instead.');
+    return false;
+  }
+}
+
+async function copyText(text, label) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast((label || 'Content') + ' copied to clipboard');
+  } catch (e) {
+    toast('Copy failed — your browser may need a tap-triggered copy.');
+  }
+}
+
+/* ======================================================================
+   SECTION: VIDEO + TRANSPORT
+   ====================================================================== */
+const videoEl = $('videoEl');
+const overlayCanvas = $('overlayCanvas');
+const octx = overlayCanvas.getContext('2d');
+
+function getFps() {
+  const sel = $('fpsSelect').value;
+  if (sel === 'custom') return Math.max(0.1, parseFloat($('fpsCustom').value) || 30);
+  return parseFloat(sel);
+}
+
+// Core loader — takes any Blob (a File from the picker, or one fetched from
+// a URL) plus a display name, and does everything needed to bring it on
+// stage. handleVideoFile and loadSampleVideo both funnel through this so
+// there's exactly one place that wires up the transport UI, autosave, etc.
+function loadVideoBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  videoEl.src = url;
+  state.videoName = name;
+  $('videoNameReadout').textContent = name;
+  videoEl.onloadedmetadata = () => {
+    state.videoLoaded = true;
+    state.videoDuration = videoEl.duration;
+    state.fps = getFps();
+    state.frameCount = Math.max(1, Math.round(state.videoDuration * state.fps));
+    state.currentFrame = 0;
+    $('stageEmpty').style.display = 'none';
+    $('stageMedia').style.display = 'block';
+    $('scrub').max = String(state.frameCount - 1);
+    $('scrub').disabled = false;
+    $('btnPlay').disabled = false;
+    $('btnFrameBack').disabled = false;
+    $('btnFrameFwd').disabled = false;
+    $('speedSelect').disabled = false;
+    videoEl.currentTime = 0;
+    setTimeout(() => { fitCanvasToVideo(); redrawOverlay(); }, 30);
+    updateTransportUI();
+    maybeApplyAutosaveFor(name);
+    autosaveSoon();
+    toast('Video loaded — ' + state.videoDuration.toFixed(2) + 's at ' + state.fps + ' fps (' + state.frameCount + ' frames)');
+  };
+  videoEl.onerror = () => {
+    toast('This browser could not open that video file. Try an H.264 .mp4 or .mov.');
+  };
+}
+function handleVideoFile(file) {
+  if (!file) return;
+  loadVideoBlob(file, file.name);
+}
+
+// ---- Sample video (for self-hosted copies, e.g. GitHub Pages) ----
+// If a file with this name sits right next to this HTML file on the server,
+// it's offered as a one-tap "Try the sample video" and (unless disabled
+// below) loaded automatically the first time the page opens with nothing
+// else loaded yet. This only works when the page is actually served over
+// http(s) — it does nothing on a published Artifact or when the file is
+// opened directly from disk, since there's no matching file to fetch there,
+// and the failure is silent in that case rather than showing an error.
+const SAMPLE_VIDEO_URL = 'sample-video.mov'; // set to '' to turn this off entirely
+const SAMPLE_VIDEO_AUTOLOAD = true; // false = only offer the button, never auto-load
+
+async function loadSampleVideo(opts) {
+  opts = opts || {};
+  if (!SAMPLE_VIDEO_URL) { if (!opts.silent) toast('No sample video is set up for this page.'); return; }
+  try {
+    const res = await fetch(SAMPLE_VIDEO_URL);
+    if (!res.ok) throw new Error('sample video fetch failed: ' + res.status);
+    const blob = await res.blob();
+    loadVideoBlob(blob, SAMPLE_VIDEO_URL.split('/').pop());
+  } catch (e) {
+    if (!opts.silent) toast('Could not load the sample video — make sure "' + SAMPLE_VIDEO_URL + '" is uploaded next to this page.');
+  }
+}
+// Probes for the sample file at startup (HEAD request — no download) so the
+// "Try the sample video" button only appears once the file actually exists,
+// rather than showing a button that's guaranteed to fail before it's added.
+async function checkSampleVideoAvailable() {
+  if (!SAMPLE_VIDEO_URL) return false;
+  try {
+    const res = await fetch(SAMPLE_VIDEO_URL, { method: 'HEAD' });
+    return res.ok;
+  } catch (e) { return false; }
+}
+
+// #stageMedia (the video's containing box) fills the whole stage area, and
+// the video is letterboxed inside it with object-fit:contain — so unlike a
+// box that shrink-wraps the video, the rendered *image* rectangle is
+// usually smaller than the element's own box. displayRect tracks both: the
+// canvas is sized to the full container box (so it can paint the letterbox
+// bars too), while offX/offY/dispW/dispH locate the actual image within it
+// for coordinate mapping.
+function fitCanvasToVideo() {
+  const mediaEl = $('stageMedia');
+  const rect = mediaEl.getBoundingClientRect();
+  const cw = rect.width, ch = rect.height;
+  if (!cw || !ch) return;
+  const dpr = window.devicePixelRatio || 1;
+  overlayCanvas.style.width = cw + 'px';
+  overlayCanvas.style.height = ch + 'px';
+  overlayCanvas.width = Math.round(cw * dpr);
+  overlayCanvas.height = Math.round(ch * dpr);
+  octx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const vw = videoEl.videoWidth || cw, vh = videoEl.videoHeight || ch;
+  const containerAspect = cw / ch, videoAspect = vw / vh;
+  let dispW, dispH, offX, offY;
+  if (videoAspect > containerAspect) { dispW = cw; dispH = cw / videoAspect; offX = 0; offY = (ch - dispH) / 2; }
+  else { dispH = ch; dispW = ch * videoAspect; offY = 0; offX = (cw - dispW) / 2; }
+  state.displayRect = { scale: vw / dispW, offX, offY, dispW, dispH, cw, ch, vw, vh };
+  if (!state.calibration.originPx) {
+    state.calibration.originPx = { x: vw / 2, y: vh / 2 };
+  }
+}
+window.addEventListener('resize', () => { fitCanvasToVideo(); redrawOverlay(); });
+
+function cssPointFromEvent(evt) {
+  const rect = overlayCanvas.getBoundingClientRect();
+  const cx = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+  const cy = (evt.touches ? evt.touches[0].clientY : evt.clientY) - rect.top;
+  return { x: cx, y: cy };
+}
+// css point (relative to the canvas / stageMedia box) -> intrinsic video pixel
+function cssToVideoPx(p) {
+  const d = state.displayRect, s = d.scale || 1;
+  return { x: (p.x - d.offX) * s, y: (p.y - d.offY) * s };
+}
+function videoPxToCss(p) {
+  const d = state.displayRect, s = d.scale || 1;
+  return { x: p.x / s + d.offX, y: p.y / s + d.offY };
+}
+// true once the intrinsic point actually falls within the video frame
+// (rather than in the letterbox bars) — used to keep marking clicks
+// meaningful.
+function isWithinVideoFrame(vp) {
+  const d = state.displayRect;
+  return vp.x >= 0 && vp.y >= 0 && vp.x <= d.vw && vp.y <= d.vh;
+}
+
+// ---- Frame-accurate seeking ----
+let _seekToken = 0;
+function seekToFrame(frameIdx) {
+  frameIdx = Math.min(state.frameCount - 1, Math.max(0, frameIdx));
+  const t = Math.min(state.videoDuration - 1e-4, Math.max(0, frameIndexToTime(frameIdx, state.fps)));
+  state.currentFrame = frameIdx;
+  const myToken = ++_seekToken;
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => { if (done) return; done = true; videoEl.removeEventListener('seeked', onSeeked); resolve(); };
+    const onSeeked = () => { if (myToken === _seekToken) finish(); };
+    videoEl.addEventListener('seeked', onSeeked);
+    videoEl.currentTime = t;
+    setTimeout(finish, 260); // fallback in case 'seeked' doesn't fire promptly
+  });
+}
+
+async function stepFrame(delta) {
+  if (state.playing) togglePlay(false);
+  await seekToFrame(state.currentFrame + delta);
+  updateTransportUI();
+  redrawOverlay();
+}
+
+function updateTransportUI() {
+  $('scrub').value = String(state.currentFrame);
+  $('frameReadout').textContent = state.currentFrame + ' / ' + Math.max(0, state.frameCount - 1);
+  $('timeReadout').textContent = frameIndexToTime(state.currentFrame, state.fps).toFixed(3) + ' s';
+  $('autoAdvanceReadout').textContent = state.autoAdvance ? 'auto-advance on' : '';
+  const fb = $('fpsBadge');
+  if (state.videoLoaded) { fb.style.display = 'block'; fb.textContent = state.fps + ' fps'; }
+}
+
+function togglePlay(forceState) {
+  const shouldPlay = forceState !== undefined ? forceState : !state.playing;
+  state.playing = shouldPlay;
+  $('playIcon').setAttribute('d', shouldPlay ? 'M7 5h4v14H7zM13 5h4v14h-4z' : 'M8 5l12 7-12 7z');
+  if (shouldPlay) {
+    videoEl.playbackRate = state.playbackSpeed;
+    videoEl.play();
+  } else {
+    videoEl.pause();
+    state.currentFrame = timeToNearestFrameIndex(videoEl.currentTime, state.fps);
+    updateTransportUI();
+  }
+}
+videoEl.addEventListener('play', () => {
+  const loop = () => {
+    if (!state.playing) return;
+    state.currentFrame = timeToNearestFrameIndex(videoEl.currentTime, state.fps);
+    updateTransportUI();
+    redrawOverlay();
+    if (videoEl.ended || videoEl.paused) { state.playing = false; $('playIcon').setAttribute('d', 'M8 5l12 7-12 7z'); return; }
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+});
+videoEl.addEventListener('pause', () => { state.playing = false; $('playIcon').setAttribute('d', 'M8 5l12 7-12 7z'); });
+
+/* ======================================================================
+   SECTION: CANVAS OVERLAY + INTERACTION (modes, tracking, calibration)
+   ====================================================================== */
+function setMode(mode) {
+  state.mode = mode;
+  state.calibration.pendingStickClick = null;
+  state.tape.p1 = null; state.tape.p2 = null;
+  const banner = $('modeBanner');
+  const labels = {
+    select: '', track: 'Tap the moving thing on this frame',
+    calibrate: 'Tap both ends of your ruler', axes: 'Tap where you want 0, 0 to be',
+    tape: tapeBannerText(),
+  };
+  if (mode === 'select' || !labels[mode]) { banner.classList.remove('show'); }
+  else {
+    banner.classList.add('show');
+    $('modeBannerText').textContent = labels[mode];
+    $('modeBannerSwatch').style.background = mode === 'track' ? (activeTrack() ? activeTrack().color : '#999') : (mode === 'tape' ? '#be4863' : 'var(--amber)');
+  }
+  redrawOverlay();
+  renderCalibrationPanel(); // keeps the Ruler popover's inline "tap the video" buttons in sync with the mode
+  syncEdgeButtons();
+}
+
+// Text for the tape-measure mode banner — a live readout once both points
+// are tapped, using the calibrated scale when one's been set (falls back to
+// raw pixels otherwise, same as everywhere else in the app before calibration).
+function tapeBannerText() {
+  if (state.tape.p1 && state.tape.p2) {
+    let label = Math.hypot(state.tape.p2.x - state.tape.p1.x, state.tape.p2.y - state.tape.p1.y).toFixed(1) + ' px';
+    if (hasScaleCalibration()) {
+      const cal = getCalibrationObj();
+      const w1 = cal.pixelToWorld(state.tape.p1), w2 = cal.pixelToWorld(state.tape.p2);
+      label = Math.hypot(w2.x - w1.x, w2.y - w1.y).toFixed(4) + ' ' + state.calibration.unit;
+    }
+    return 'Distance: ' + label + '  ·  tap again to measure something else';
+  }
+  return 'Tap two points to measure the distance between them';
+}
+
+function onStageClick(evt) {
+  if (!state.videoLoaded) return;
+  evt.preventDefault();
+  const css = cssPointFromEvent(evt);
+  const vp = cssToVideoPx(css);
+  if (state.mode !== 'select' && !isWithinVideoFrame(vp)) return; // tap landed in a letterbox bar
+
+  if (state.mode === 'track') {
+    const trk = activeTrack();
+    if (!trk) { toast('Add a dot first (Track tab).'); return; }
+    trk.points[state.currentFrame] = { x: vp.x, y: vp.y };
+    afterMark();
+  } else if (state.mode === 'calibrate') {
+    const c = state.calibration;
+    if (!c.pendingStickClick) { c.pendingStickClick = vp; }
+    else { c.stickP1 = c.pendingStickClick; c.stickP2 = vp; c.pendingStickClick = null; renderCalibrationPanel(); }
+    redrawOverlay();
+    autosaveSoon();
+  } else if (state.mode === 'axes') {
+    state.calibration.originPx = vp;
+    renderCalibrationPanel();
+    redrawOverlay();
+    refreshAll();
+    autosaveSoon();
+  } else if (state.mode === 'tape') {
+    if (!state.tape.p1) { state.tape.p1 = vp; }
+    else if (!state.tape.p2) { state.tape.p2 = vp; }
+    else { state.tape.p1 = vp; state.tape.p2 = null; }
+    redrawOverlay();
+    $('modeBannerText').textContent = tapeBannerText();
+  }
+}
+overlayCanvas.addEventListener('pointerdown', onStageClick);
+
+function afterMark() {
+  renderTracksPanel();
+  refreshAll();
+  redrawOverlay();
+  autosaveSoon();
+  if (state.autoAdvance && state.currentFrame < state.frameCount - 1) {
+    stepFrame(1);
+  }
+}
+
+function getCalibrationObj() {
+  const c = state.calibration;
+  if (!c.originPx) return null;
+  const upp = (c.stickP1 && c.stickP2) ? c.knownDistance / Math.hypot(c.stickP2.x - c.stickP1.x, c.stickP2.y - c.stickP1.y) : null;
+  return makeCalibration({ originPx: c.originPx, thetaRad: c.thetaRad, unitsPerPixel: upp || 1 });
+}
+function hasScaleCalibration() { const c = state.calibration; return !!(c.stickP1 && c.stickP2 && c.knownDistance > 0); }
+
+function redrawOverlay() {
+  const w = overlayCanvas.width / (window.devicePixelRatio || 1);
+  const h = overlayCanvas.height / (window.devicePixelRatio || 1);
+  octx.clearRect(0, 0, w, h);
+  if (!state.videoLoaded) return;
+  const dark = isDark();
+
+  // axes
+  const c = state.calibration;
+  if (c.originPx) {
+    const o = videoPxToCss(c.originPx);
+    const len = Math.hypot(w, h);
+    const dirX = { x: Math.cos(c.thetaRad), y: -Math.sin(c.thetaRad) };
+    octx.save();
+    octx.strokeStyle = dark ? 'rgba(226,162,61,0.75)' : 'rgba(150,94,7,0.7)';
+    octx.lineWidth = 1.25;
+    octx.setLineDash([5, 5]);
+    octx.beginPath(); octx.moveTo(o.x - dirX.x * len, o.y - dirX.y * len); octx.lineTo(o.x + dirX.x * len, o.y + dirX.y * len); octx.stroke();
+    const dirY = { x: -dirX.y, y: dirX.x };
+    octx.beginPath(); octx.moveTo(o.x - dirY.x * len, o.y - dirY.y * len); octx.lineTo(o.x + dirY.x * len, o.y + dirY.y * len); octx.stroke();
+    octx.setLineDash([]);
+    octx.fillStyle = dark ? '#e2a23d' : '#c2790c';
+    octx.beginPath(); octx.arc(o.x, o.y, 4, 0, 7); octx.fill();
+    octx.restore();
+  }
+
+  // calibration stick
+  if (c.stickP1 && c.stickP2) {
+    const p1 = videoPxToCss(c.stickP1), p2 = videoPxToCss(c.stickP2);
+    drawMeasureLine(p1, p2, dark ? '#e2a23d' : '#965e07', c.knownDistance.toFixed(3) + ' ' + c.unit);
+  } else if (c.pendingStickClick) {
+    const p = videoPxToCss(c.pendingStickClick);
+    drawCrossMark(p, dark ? '#e2a23d' : '#965e07');
+  }
+
+  // tape measure (one-off, independent of any track)
+  if (state.tape.p1 && state.tape.p2) {
+    const p1 = videoPxToCss(state.tape.p1), p2 = videoPxToCss(state.tape.p2);
+    let label = Math.hypot(state.tape.p2.x - state.tape.p1.x, state.tape.p2.y - state.tape.p1.y).toFixed(1) + ' px';
+    if (hasScaleCalibration()) {
+      const cal = getCalibrationObj();
+      const w1 = cal.pixelToWorld(state.tape.p1), w2 = cal.pixelToWorld(state.tape.p2);
+      label = Math.hypot(w2.x - w1.x, w2.y - w1.y).toFixed(4) + ' ' + c.unit;
+    }
+    drawMeasureLine(p1, p2, '#be4863', label);
+  } else if (state.tape.p1) {
+    drawCrossMark(videoPxToCss(state.tape.p1), '#be4863');
+  }
+
+  // tracks
+  state.tracks.forEach((trk) => {
+    if (!trk.visible) return;
+    const frames = Object.keys(trk.points).map(Number).sort((a, b) => a - b);
+    octx.save();
+    octx.strokeStyle = trk.color; octx.lineWidth = 1.5; octx.globalAlpha = 0.55;
+    octx.beginPath();
+    frames.forEach((f, i) => {
+      if (f > state.currentFrame) return;
+      const p = videoPxToCss(trk.points[f]);
+      if (i === 0) octx.moveTo(p.x, p.y); else octx.lineTo(p.x, p.y);
+    });
+    octx.stroke();
+    octx.globalAlpha = 1;
+    frames.forEach((f) => {
+      if (f > state.currentFrame) return;
+      const p = videoPxToCss(trk.points[f]);
+      const isCurrent = f === state.currentFrame;
+      octx.fillStyle = trk.color;
+      octx.beginPath(); octx.arc(p.x, p.y, isCurrent ? 5.5 : 2.6, 0, 7); octx.fill();
+      if (isCurrent) { octx.strokeStyle = '#fff'; octx.lineWidth = 1.5; octx.stroke(); }
+    });
+    octx.restore();
+  });
+}
+
+function drawCrossMark(p, color) {
+  octx.save();
+  octx.strokeStyle = color; octx.lineWidth = 2;
+  octx.beginPath(); octx.moveTo(p.x - 7, p.y); octx.lineTo(p.x + 7, p.y); octx.moveTo(p.x, p.y - 7); octx.lineTo(p.x, p.y + 7); octx.stroke();
+  octx.restore();
+}
+function drawMeasureLine(p1, p2, color, label) {
+  octx.save();
+  octx.strokeStyle = color; octx.lineWidth = 2;
+  octx.beginPath(); octx.moveTo(p1.x, p1.y); octx.lineTo(p2.x, p2.y); octx.stroke();
+  [p1, p2].forEach((p) => { octx.beginPath(); octx.arc(p.x, p.y, 4, 0, 7); octx.fillStyle = color; octx.fill(); });
+  const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+  octx.font = "600 12px 'IBM Plex Sans', sans-serif";
+  const tw = octx.measureText(label).width;
+  octx.fillStyle = 'rgba(18,25,26,0.78)';
+  octx.fillRect(mid.x - tw / 2 - 5, mid.y - 20, tw + 10, 17);
+  octx.fillStyle = '#eef5f3';
+  octx.fillText(label, mid.x - tw / 2, mid.y - 7.5);
+  octx.restore();
+}
+/* ======================================================================
+   SECTION: TRACKS PANEL
+   ====================================================================== */
+function addTrack() {
+  const idx = state.tracks.length;
+  const trk = makeTrack(idx);
+  state.tracks.push(trk);
+  state.activeTrackId = trk.id;
+  renderTracksPanel();
+  refreshAll();
+  autosaveSoon();
+}
+function deleteTrack(id) {
+  state.tracks = state.tracks.filter((t) => t.id !== id);
+  if (state.activeTrackId === id) state.activeTrackId = state.tracks.length ? state.tracks[0].id : null;
+  // graphs pointed at the deleted track fall back to whatever's left, or are dropped if nothing is
+  state.graphs = state.tracks.length
+    ? state.graphs.map((g) => (g.trackId === id ? { ...g, trackId: state.tracks[0].id, xKey: 't', yKey: 'x' } : g))
+    : [];
+  renderTracksPanel();
+  refreshAll();
+  redrawOverlay();
+  autosaveSoon();
+}
+
+function renderTracksPanel() {
+  const el = $('tab-tracks');
+  const rows = state.tracks.map((t) => {
+    const n = Object.keys(t.points).length;
+    return `<div class="track-row ${t.id === state.activeTrackId ? 'active' : ''}" data-id="${t.id}">
+      <span class="swatch" style="background:${t.color}"></span>
+      <input class="name" value="${escapeAttr(t.name)}" data-id="${t.id}" data-action="rename">
+      <span class="track-meta mono">${n} point${n === 1 ? '' : 's'} marked</span>
+      <button class="icon-btn" data-id="${t.id}" data-action="vis" title="Show/hide">${t.visible ? eyeSvg() : eyeOffSvg()}</button>
+      <button class="icon-btn" data-id="${t.id}" data-action="del" title="Delete">${trashSvg()}</button>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <h3 class="panel-h">What are you tracking?</h3>
+    <div class="card">
+      <label class="inline" style="margin-bottom:8px;"><input type="checkbox" id="autoAdvanceToggle" ${state.autoAdvance ? 'checked' : ''}> Jump to the next frame after each tap</label>
+      ${rows || '<div class="empty-note">No dots yet. Tap "+ Add a dot" below, then tap the object on each frame of the video.</div>'}
+    </div>
+    <button class="btn sm" id="btnAddPointTrack" style="width:100%;">+ Add a dot</button>
+    <div class="help" style="margin-top:12px;">Pick a dot in the list, then tap the object you're tracking on each frame of the video — the dot you're marking is highlighted here and shown over the video.</div>
+  `;
+
+  el.querySelectorAll('.track-row').forEach((row) => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('[data-action]')) return;
+      state.activeTrackId = row.dataset.id;
+      renderTracksPanel();
+      setMode('track');
+      closeAllPopovers();
+    });
+  });
+  el.querySelectorAll('[data-action="rename"]').forEach((inp) => {
+    inp.addEventListener('change', () => {
+      const t = state.tracks.find((x) => x.id === inp.dataset.id);
+      if (t) { t.name = inp.value || t.name; renderDataPanel(); renderGraphsPanel(); autosaveSoon(); }
+    });
+  });
+  el.querySelectorAll('[data-action="vis"]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const t = state.tracks.find((x) => x.id === b.dataset.id);
+      if (t) { t.visible = !t.visible; renderTracksPanel(); redrawOverlay(); autosaveSoon(); }
+    });
+  });
+  el.querySelectorAll('[data-action="del"]').forEach((b) => {
+    b.addEventListener('click', () => deleteTrack(b.dataset.id));
+  });
+  $('btnAddPointTrack').addEventListener('click', () => { addTrack(); setMode('track'); closeAllPopovers(); });
+  $('autoAdvanceToggle').addEventListener('change', (e) => { state.autoAdvance = e.target.checked; updateTransportUI(); });
+}
+function escapeAttr(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+function eyeSvg() { return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>'; }
+function eyeOffSvg() { return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'; }
+function trashSvg() { return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'; }
+function expandSvg() { return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>'; }
+function imageSvg() { return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'; }
+
+/* ======================================================================
+   SECTION: CALIBRATION PANEL
+   ====================================================================== */
+function renderCalibrationPanel() {
+  const el = $('tab-calibration');
+  const c = state.calibration;
+  const scale = hasScaleCalibration() ? (c.knownDistance / Math.hypot(c.stickP2.x - c.stickP1.x, c.stickP2.y - c.stickP1.y)) : null;
+  el.innerHTML = `
+    <h3 class="panel-h">Step 1: Set your ruler</h3>
+    <div class="card">
+      <div class="step"><span class="n">1</span> Tap the button below, then tap both ends of a ruler or anything of known length in the video.</div>
+      <div class="step"><span class="n">2</span> Type in how long that really is.</div>
+      <button class="btn sm ${state.mode === 'calibrate' ? 'accent' : ''}" id="btnStartRuler" style="width:100%; margin-bottom:10px;">${state.mode === 'calibrate' ? 'Tap the video now…' : 'Tap the video to mark the ruler'}</button>
+      <div class="field-row">
+        <span class="label">Real length</span>
+        <div style="display:flex; gap:6px;">
+          <input class="field num" id="calDistance" type="number" min="0" step="any" value="${c.knownDistance}">
+          <select class="field" id="calUnit">${UNIT_OPTIONS.map((u) => `<option value="${u}" ${u === c.unit ? 'selected' : ''}>${u}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="field-row"><span class="label">Scale</span><span class="readout" id="calScaleReadout">${scale ? (scale.toFixed(5) + ' ' + c.unit + '/px') : '—'}</span></div>
+    </div>
+
+    <h3 class="panel-h">Step 2: Set the starting point</h3>
+    <div class="card">
+      <div class="step"><span class="n">1</span> Tap the button below and tap where you want 0, 0 to be — usually where the object starts moving.</div>
+      <div class="step"><span class="n">2</span> If the camera was tilted, straighten things out here.</div>
+      <button class="btn sm ${state.mode === 'axes' ? 'accent' : ''}" id="btnStartAxes" style="width:100%; margin-bottom:10px;">${state.mode === 'axes' ? 'Tap the video now…' : 'Tap the video to set 0, 0'}</button>
+      <div class="field-row"><span class="label">Start point (px)</span><span class="readout">${c.originPx ? Math.round(c.originPx.x) + ', ' + Math.round(c.originPx.y) : '—'}</span></div>
+      <div class="field-row">
+        <span class="label">Tilt</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input class="field num" id="axisAngle" type="number" step="0.1" value="${(c.thetaRad * 180 / Math.PI).toFixed(1)}"><span class="readout">°</span>
+        </div>
+      </div>
+      <button class="btn sm" id="btnUseStickAngle" style="width:100%; margin-top:8px;" ${(c.stickP1 && c.stickP2) ? '' : 'disabled'}>Match my ruler's tilt</button>
+    </div>
+    <div class="help">You can start marking dots before doing this — but do both steps to get real speeds and distances instead of just pixels.</div>
+  `;
+  $('btnStartRuler').addEventListener('click', () => { setMode('calibrate'); closeAllPopovers(); });
+  $('btnStartAxes').addEventListener('click', () => { setMode('axes'); closeAllPopovers(); });
+  $('calDistance').addEventListener('input', (e) => { c.knownDistance = parseFloat(e.target.value) || 0; updateScaleReadout(); refreshAll(); redrawOverlay(); autosaveSoon(); });
+  $('calUnit').addEventListener('change', (e) => { c.unit = e.target.value; renderCalibrationPanel(); refreshAll(); redrawOverlay(); autosaveSoon(); });
+  $('axisAngle').addEventListener('input', (e) => { c.thetaRad = (parseFloat(e.target.value) || 0) * Math.PI / 180; refreshAll(); redrawOverlay(); autosaveSoon(); });
+  const stickBtn = $('btnUseStickAngle');
+  if (stickBtn) stickBtn.addEventListener('click', () => {
+    if (!(c.stickP1 && c.stickP2)) return;
+    c.thetaRad = Math.atan2(c.stickP2.y - c.stickP1.y, c.stickP2.x - c.stickP1.x);
+    renderCalibrationPanel(); refreshAll(); redrawOverlay(); autosaveSoon();
+  });
+}
+
+// Updates just the Scale text (used while typing in "Real length" so the
+// input never loses focus mid-keystroke — see calDistance's listener above).
+function updateScaleReadout() {
+  const c = state.calibration;
+  const el = $('calScaleReadout');
+  if (!el) return;
+  const scale = hasScaleCalibration() ? (c.knownDistance / Math.hypot(c.stickP2.x - c.stickP1.x, c.stickP2.y - c.stickP1.y)) : null;
+  el.textContent = scale ? (scale.toFixed(5) + ' ' + c.unit + '/px') : '—';
+}
+
+/* ======================================================================
+   SECTION: DERIVED DATA (per-track columns)
+   ====================================================================== */
+function unitsLabel() { return hasScaleCalibration() ? state.calibration.unit : 'px'; }
+
+// Returns, for a point track, the calibrated time series in frame order:
+// { frames, t, x, y, vx, vy, ax, ay, speed }. Falls back to raw (uncalibrated)
+// pixel coordinates — with world y still flipped so "up" reads positive —
+// when no distance calibration has been entered yet, so tracking can start
+// before calibration is finished.
+function computeTrackSeries(track) {
+  const frames = Object.keys(track.points).map(Number).sort((a, b) => a - b);
+  const fps = state.fps;
+  const t = frames.map((f) => frameIndexToTime(f, fps));
+  const cal = hasScaleCalibration() ? getCalibrationObj() : null;
+  const origin = state.calibration.originPx || { x: 0, y: 0 };
+  const theta = state.calibration.thetaRad;
+  const fallback = makeCalibration({ originPx: origin, thetaRad: theta, unitsPerPixel: 1 });
+  const useCal = cal || fallback;
+  const xs = [], ys = [];
+  frames.forEach((f) => { const w = useCal.pixelToWorld(track.points[f]); xs.push(w.x); ys.push(w.y); });
+  const vx = firstDerivative(t, xs), vy = firstDerivative(t, ys);
+  const ax = secondDerivative(t, xs), ay = secondDerivative(t, ys);
+  const speed = vx.map((v, i) => Math.hypot(v, vy[i]));
+  return { frames, t, x: xs, y: ys, vx, vy, ax, ay, speed, calibrated: !!cal };
+}
+
+const COLUMN_DEFS = {
+  point: [
+    { key: 't', label: 't (s)' }, { key: 'x', label: 'x' }, { key: 'y', label: 'y' },
+    { key: 'vx', label: 'v_x' }, { key: 'vy', label: 'v_y' },
+    { key: 'ax', label: 'a_x' }, { key: 'ay', label: 'a_y' },
+    { key: 'speed', label: 'speed' },
+  ],
+};
+function columnUnitSuffix(track, key) {
+  const u = unitsLabel();
+  if (key === 't') return 's';
+  if (key === 'x' || key === 'y') return u;
+  if (key === 'vx' || key === 'vy' || key === 'speed') return u + '/s';
+  if (key === 'ax' || key === 'ay') return u + '/s²';
+  return '';
+}
+
+/* ======================================================================
+   SECTION: DATA PANEL + CSV EXPORT
+   ====================================================================== */
+let dataPanelTrackId = null;
+
+function renderDataPanel() {
+  const el = $('tab-data');
+  if (!dataPanelTrackId || !state.tracks.find((t) => t.id === dataPanelTrackId)) {
+    dataPanelTrackId = state.tracks.length ? state.tracks[0].id : null;
+  }
+  if (!state.tracks.length) {
+    el.innerHTML = '<h3 class="panel-h">Numbers</h3><div class="empty-note">Add a dot and start tracking to see numbers here.</div>';
+    return;
+  }
+  const track = state.tracks.find((t) => t.id === dataPanelTrackId);
+  const series = computeTrackSeries(track);
+  const cols = COLUMN_DEFS[track.kind];
+  const rowsHtml = series.frames.map((f, i) => {
+    return '<tr><td>' + f + '</td>' + cols.map((c) => '<td>' + fmtNum(series[c.key][i], c.key === 't' ? 3 : 4) + '</td>').join('') + '</tr>';
+  }).join('');
+  el.innerHTML = `
+    <h3 class="panel-h">Numbers</h3>
+    <div class="field-row">
+      <select class="field" id="dataTrackSelect" style="flex:1;">
+        ${state.tracks.map((t) => `<option value="${t.id}" ${t.id === dataPanelTrackId ? 'selected' : ''}>${escapeAttr(t.name)}</option>`).join('')}
+      </select>
+    </div>
+    ${!series.calibrated ? '<div class="help" style="color:var(--warn);">You haven\'t set a ruler yet, so these are just pixel numbers, not real units. Do the "1. Ruler" tab for real distances and speeds.</div>' : ''}
+    <div class="table-scroll" style="margin-top:8px;">
+      <table class="data">
+        <thead><tr><th>frame</th>${cols.map((c) => `<th>${c.label}<br><span style="font-weight:400;">${columnUnitSuffix(track, c.key)}</span></th>`).join('')}</tr></thead>
+        <tbody>${rowsHtml || `<tr><td colspan="${cols.length + 1}" style="text-align:center;color:var(--text-faint);">No points marked yet</td></tr>`}</tbody>
+      </table>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <button class="btn sm" id="btnCopyCsvTrack" style="flex:1;">Copy CSV</button>
+      <button class="btn sm primary" id="btnDownloadCsvTrack" style="flex:1;">Download CSV</button>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <button class="btn sm ghost" id="btnDownloadCsvAll" style="flex:1;">Download all dots (combined CSV)</button>
+    </div>
+    <div class="help">You can paste this CSV straight into Curvewright for more graphing tools.</div>
+  `;
+  $('dataTrackSelect').addEventListener('change', (e) => { dataPanelTrackId = e.target.value; renderDataPanel(); });
+  $('btnCopyCsvTrack').addEventListener('click', () => copyText(trackCsv(track), 'CSV'));
+  $('btnDownloadCsvTrack').addEventListener('click', () => saveFile(sanitizeFilename(track.name) + '.csv', trackCsv(track), 'text/csv'));
+  $('btnDownloadCsvAll').addEventListener('click', () => saveFile('trackwright_all_tracks.csv', allTracksCsv(), 'text/csv'));
+}
+
+function trackCsv(track) {
+  const series = computeTrackSeries(track);
+  const cols = COLUMN_DEFS[track.kind];
+  const header = ['frame', ...cols.map((c) => c.key + (columnUnitSuffix(track, c.key) ? ' (' + columnUnitSuffix(track, c.key) + ')' : ''))];
+  const lines = [header.join(',')];
+  series.frames.forEach((f, i) => {
+    lines.push([f, ...cols.map((c) => numCsv(series[c.key][i]))].join(','));
+  });
+  return lines.join('\n');
+}
+function allTracksCsv() {
+  if (!state.tracks.length) return '';
+  const perTrack = state.tracks.map((t) => ({ track: t, series: computeTrackSeries(t), cols: COLUMN_DEFS[t.kind] }));
+  const allFrames = Array.from(new Set(perTrack.flatMap((p) => p.series.frames))).sort((a, b) => a - b);
+  const header = ['frame', 't (s)'];
+  perTrack.forEach((p) => { p.cols.filter((c) => c.key !== 't').forEach((c) => header.push(p.track.name + ': ' + c.key)); });
+  const lines = [header.join(',')];
+  allFrames.forEach((f) => {
+    const row = [f, numCsv(frameIndexToTime(f, state.fps))];
+    perTrack.forEach((p) => {
+      const idx = p.series.frames.indexOf(f);
+      p.cols.filter((c) => c.key !== 't').forEach((c) => row.push(idx === -1 ? '' : numCsv(p.series[c.key][idx])));
+    });
+    lines.push(row.join(','));
+  });
+  return lines.join('\n');
+}
+function numCsv(v) { return (v === undefined || v === null || Number.isNaN(v)) ? '' : String(v); }
+function sanitizeFilename(s) { return s.replace(/[^a-z0-9_-]+/gi, '_'); }
+
+/* ======================================================================
+   SECTION: GRAPHS PANEL + CHART RENDERING + FITS
+   ====================================================================== */
+function addGraph() {
+  const trk = state.tracks[0] || null;
+  state.graphs.push({
+    id: 'g_' + Math.random().toString(36).slice(2, 9),
+    trackId: trk ? trk.id : null,
+    xKey: 't', yKey: 'x',
+    fit: 'none', seedFreq: 1, roiMin: null, roiMax: null, picking: false,
+  });
+  renderGraphsPanel();
+}
+function removeGraph(id) { state.graphs = state.graphs.filter((g) => g.id !== id); renderGraphsPanel(); }
+
+function renderGraphsPanel() {
+  const el = $('tab-graphs');
+  if (!state.tracks.length) {
+    el.innerHTML = '<h3 class="panel-h">Graph</h3><div class="empty-note">Track a dot first — then come back here to see its motion as a graph.</div>';
+    closeGraphModal();
+    return;
+  }
+  el.innerHTML = `<h3 class="panel-h">Graph</h3>
+    <div id="graphCards"></div>
+    <button class="btn sm" id="btnAddGraph" style="width:100%;">+ Add a graph</button>`;
+  $('btnAddGraph').addEventListener('click', addGraph);
+  const cards = $('graphCards');
+  if (!state.graphs.length) {
+    cards.insertAdjacentHTML('beforeend', '<div class="empty-note">No graphs yet — tap "+ Add a graph" to make one.</div>');
+  }
+  state.graphs.forEach((g) => cards.insertAdjacentHTML('beforeend', graphCardHtml(g)));
+  state.graphs.forEach((g) => wireGraphCard(g));
+  if (expandedGraphId && !state.graphs.some((g) => g.id === expandedGraphId)) closeGraphModal();
+  else if (expandedGraphId) redrawGraphModal();
+}
+
+// ---- "Open larger" modal + PNG export ----
+// A same-page overlay rather than a real OS popup window: window.open() is
+// unreliable both inside a sandboxed Artifact viewer (popups usually
+// blocked) and in iPad Safari/Chrome's multitasking, so a bigger in-page
+// view is the dependable way to get a larger look at a graph. It shares
+// drawGraph() with the small card, so it's always exactly the same chart,
+// just rendered onto a bigger canvas.
+let expandedGraphId = null;
+
+function graphTitleText(g) {
+  const track = state.tracks.find((t) => t.id === g.trackId);
+  if (!track) return '';
+  const yUnit = columnUnitSuffix(track, g.yKey), xUnit = columnUnitSuffix(track, g.xKey);
+  const yLabel = eqSym(track, g.yKey) + (yUnit ? ` (${yUnit})` : '');
+  const xLabel = eqSym(track, g.xKey) + (xUnit ? ` (${xUnit})` : '');
+  return track.name + ':  ' + yLabel + ' vs ' + xLabel;
+}
+
+function openGraphModal(gId) {
+  expandedGraphId = gId;
+  $('graphModal').hidden = false;
+  redrawGraphModal();
+}
+function closeGraphModal() {
+  if (!expandedGraphId) return;
+  expandedGraphId = null;
+  $('graphModal').hidden = true;
+}
+function redrawGraphModal() {
+  if (!expandedGraphId) return;
+  const g = state.graphs.find((x) => x.id === expandedGraphId);
+  if (!g) { closeGraphModal(); return; }
+  const canvas = $('graphModalCanvas');
+  fitCanvasCard(canvas);
+  drawGraph(g, canvas);
+  const cardReadout = document.querySelector(`.graph-card[data-id="${g.id}"] .stats-readout`);
+  $('graphModalStats').textContent = cardReadout ? cardReadout.textContent : '';
+  const cardFitReadout = document.querySelector(`.graph-card[data-id="${g.id}"] .fit-readout`);
+  $('graphModalFitEq').textContent = cardFitReadout ? cardFitReadout.textContent : '';
+  $('graphModalTitle').textContent = graphTitleText(g);
+}
+window.addEventListener('resize', () => { if (expandedGraphId) redrawGraphModal(); });
+
+// Exporting re-renders onto a dedicated offscreen canvas rather than
+// snapshotting the on-screen one: the export always gets a title bar (axis
+// labels are already part of drawGraph itself, so they show on-screen too),
+// and an opaque background so the PNG looks right dropped into a document
+// regardless of the app's current theme.
+function exportGraphImage(canvas, g) {
+  const track = state.tracks.find((t) => t.id === g.trackId);
+  const name = track ? sanitizeFilename(track.name) : 'graph';
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.width / dpr, cssH = canvas.height / dpr;
+  const off = document.createElement('canvas');
+  off.width = Math.round(cssW * dpr);
+  off.height = Math.round((cssH + GRAPH_TITLE_BAND_H) * dpr); // taller, so the title doesn't eat into the plot area
+  off.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawGraph(g, off, { title: graphTitleText(g), background: getCss('--surface') });
+  off.toBlob((blob) => {
+    if (blob) saveFile(name + '_' + (g.yKey || 'y') + '_vs_' + (g.xKey || 'x') + '.png', blob, 'image/png');
+  }, 'image/png');
+}
+
+const QUICK_CHARTS = [
+  { key: 'x', label: 'Left/right' },
+  { key: 'y', label: 'Up/down' },
+  { key: 'speed', label: 'Speed', title: 'Overall speed — left/right and up/down motion combined into one number' },
+];
+
+function graphCardHtml(g) {
+  const track = state.tracks.find((t) => t.id === g.trackId) || state.tracks[0];
+  const cols = COLUMN_DEFS[track.kind];
+  const opt = (key, val) => `<option value="${key}" ${key === val ? 'selected' : ''}>${cols.find((c) => c.key === key).label}</option>`;
+  const isPreset = (key) => g.xKey === 't' && g.yKey === key;
+  return `<div class="graph-card" data-id="${g.id}">
+    <div class="graph-head-simple">
+      <div class="quick-charts">
+        ${QUICK_CHARTS.map((q) => `<button class="btn sm ${isPreset(q.key) ? 'accent' : 'ghost'}" data-preset="${q.key}"${q.title ? ` title="${escapeAttr(q.title)}"` : ''}>${q.label}</button>`).join('')}
+      </div>
+      <button class="icon-btn" data-action="expand" style="margin-left:auto;" title="Open larger">${expandSvg()}</button>
+      <button class="icon-btn" data-action="savePng" title="Save graph as an image">${imageSvg()}</button>
+      <button class="icon-btn" data-action="remove" title="Remove this graph">${trashSvg()}</button>
+    </div>
+    <div class="graph-canvas-wrap"><canvas class="chart"></canvas></div>
+    <div class="graph-foot"><div class="readouts"><span class="stats-readout"></span><span class="fit-readout"></span></div></div>
+    <details class="adv">
+      <summary>More options</summary>
+      <div class="graph-head">
+        ${state.tracks.length > 1 ? `<div class="axis-field">
+          <span class="axis-cap">Dot</span>
+          <select class="field trackSel" style="max-width:110px;">${state.tracks.map((t) => `<option value="${t.id}" ${t.id === g.trackId ? 'selected' : ''}>${escapeAttr(t.name)}</option>`).join('')}</select>
+        </div>` : ''}
+        <div class="axis-field">
+          <span class="axis-cap">↑ Y — vertical</span>
+          <select class="field ySel">${cols.map((c) => opt(c.key, g.yKey)).join('')}</select>
+        </div>
+        <span class="vs-label">vs</span>
+        <div class="axis-field">
+          <span class="axis-cap">→ X — horizontal</span>
+          <select class="field xSel">${cols.map((c) => opt(c.key, g.xKey)).join('')}</select>
+        </div>
+      </div>
+      <div class="graph-foot">
+        <select class="field fitSel" style="width:130px;">
+          <option value="none" ${g.fit === 'none' ? 'selected' : ''}>No fit line</option>
+          <option value="linear" ${g.fit === 'linear' ? 'selected' : ''}>Straight line</option>
+          <option value="quadratic" ${g.fit === 'quadratic' ? 'selected' : ''}>Curve (quadratic)</option>
+          <option value="cubic" ${g.fit === 'cubic' ? 'selected' : ''}>Curve (cubic)</option>
+          <option value="sinusoidal" ${g.fit === 'sinusoidal' ? 'selected' : ''}>Wave (sinusoidal)</option>
+          <option value="auto" ${g.fit === 'auto' ? 'selected' : ''}>Best fit for me</option>
+        </select>
+        <label class="inline seedWrap" style="${g.fit === 'sinusoidal' ? '' : 'display:none;'}">seed f<input class="field num seedFreq" type="number" step="any" value="${g.seedFreq}" style="width:56px;"></label>
+      </div>
+      <div class="graph-foot">
+        <span class="pill">Selected part (frames)
+          <input class="field num roiMin" type="number" placeholder="min" value="${g.roiMin ?? ''}" style="width:52px;">
+          –
+          <input class="field num roiMax" type="number" placeholder="max" value="${g.roiMax ?? ''}" style="width:52px;">
+        </span>
+        <button class="btn sm ghost" data-action="clearRoi">Clear</button>
+      </div>
+    </details>
+  </div>`;
+}
+
+function wireGraphCard(g) {
+  const card = document.querySelector(`.graph-card[data-id="${g.id}"]`);
+  if (!card) return;
+  const canvas = card.querySelector('canvas.chart');
+  const redraw = () => { drawGraph(g, canvas); if (expandedGraphId === g.id) redrawGraphModal(); };
+  card.querySelectorAll('[data-preset]').forEach((b) => {
+    b.addEventListener('click', () => {
+      g.xKey = 't'; g.yKey = b.dataset.preset; g.roiMin = null; g.roiMax = null;
+      renderGraphsPanel();
+    });
+  });
+  const trackSel = card.querySelector('.trackSel');
+  if (trackSel) trackSel.addEventListener('change', (e) => { g.trackId = e.target.value; g.roiMin = null; g.roiMax = null; renderGraphsPanel(); });
+  card.querySelector('.xSel').addEventListener('change', (e) => { g.xKey = e.target.value; redraw(); });
+  card.querySelector('.ySel').addEventListener('change', (e) => { g.yKey = e.target.value; redraw(); });
+  card.querySelector('.fitSel').addEventListener('change', (e) => { g.fit = e.target.value; card.querySelector('.seedWrap').style.display = g.fit === 'sinusoidal' ? '' : 'none'; redraw(); });
+  const seedInp = card.querySelector('.seedFreq');
+  if (seedInp) seedInp.addEventListener('input', (e) => { g.seedFreq = parseFloat(e.target.value) || 1; redraw(); });
+  card.querySelector('.roiMin').addEventListener('input', (e) => { g.roiMin = e.target.value === '' ? null : Number(e.target.value); redraw(); });
+  card.querySelector('.roiMax').addEventListener('input', (e) => { g.roiMax = e.target.value === '' ? null : Number(e.target.value); redraw(); });
+  card.querySelector('[data-action="clearRoi"]').addEventListener('click', () => { g.roiMin = null; g.roiMax = null; renderGraphsPanel(); });
+  card.querySelector('[data-action="remove"]').addEventListener('click', () => removeGraph(g.id));
+  card.querySelector('[data-action="expand"]').addEventListener('click', () => openGraphModal(g.id));
+  card.querySelector('[data-action="savePng"]').addEventListener('click', () => exportGraphImage(canvas, g));
+  // Drag directly across the chart to select a stretch — the readout below
+  // updates live as you drag, then locks in on release. A plain tap (no
+  // movement) clears the current selection rather than picking a
+  // zero-width one-frame range.
+  canvas.addEventListener('pointerdown', (evt) => {
+    const rect = canvas.getBoundingClientRect();
+    const startFrame = nearestFrameForPixelX(g, canvas, evt.clientX - rect.left);
+    if (startFrame === null) return;
+    canvas.setPointerCapture(evt.pointerId);
+    let moved = false;
+    g.roiMin = startFrame; g.roiMax = startFrame;
+    redraw();
+    const onMove = (mv) => {
+      moved = true;
+      const f = nearestFrameForPixelX(g, canvas, mv.clientX - rect.left);
+      if (f !== null) { g.roiMax = f; redraw(); }
+    };
+    const onUp = () => {
+      canvas.removeEventListener('pointermove', onMove);
+      canvas.removeEventListener('pointerup', onUp);
+      canvas.removeEventListener('pointercancel', onUp);
+      if (!moved) { g.roiMin = null; g.roiMax = null; redraw(); }
+    };
+    canvas.addEventListener('pointermove', onMove);
+    canvas.addEventListener('pointerup', onUp);
+    canvas.addEventListener('pointercancel', onUp);
+  });
+  fitCanvasCard(canvas);
+  drawGraph(g, canvas);
+}
+
+function fitCanvasCard(canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  canvas.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function graphSeries(g) {
+  const track = state.tracks.find((t) => t.id === g.trackId);
+  if (!track) return null;
+  const series = computeTrackSeries(track);
+  const xs = series[g.xKey], ys = series[g.yKey];
+  const pts = series.frames.map((f, i) => ({ frame: f, x: xs[i], y: ys[i] }))
+    .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
+  return { track, series, pts };
+}
+function nearestFrameForPixelX(g, canvas, cssX) {
+  const gs = graphSeries(g);
+  if (!gs || !gs.pts.length) return null;
+  const rect = canvas.getBoundingClientRect();
+  const pad = 40;
+  const xExtent = extent(gs.pts.map((p) => p.x));
+  const xToPx = (x) => pad + (x - xExtent[0]) / (xExtent[1] - xExtent[0] || 1) * (rect.width - pad - 12);
+  let best = gs.pts[0], bestD = Infinity;
+  gs.pts.forEach((p) => { const d = Math.abs(xToPx(p.x) - cssX); if (d < bestD) { bestD = d; best = p; } });
+  return best.frame;
+}
+function extent(arr) { return [Math.min(...arr), Math.max(...arr)]; }
+
+// The two ROI bounds are set independently (drag sets both together, but
+// the advanced numeric fields can set just one), so only sort them when
+// both are actually numbers — a lone bound still means "from here to the
+// end" / "from the start to here" as before. This is what makes dragging
+// right-to-left behave the same as left-to-right.
+function orderedRoi(g) {
+  const hasMin = g.roiMin !== null, hasMax = g.roiMax !== null;
+  let lo = hasMin ? g.roiMin : -Infinity;
+  let hi = hasMax ? g.roiMax : Infinity;
+  if (hasMin && hasMax && lo > hi) { const t = lo; lo = hi; hi = t; }
+  return { lo, hi, hasRoi: hasMin || hasMax };
+}
+
+const GRAPH_TITLE_BAND_H = 26; // css px reserved at the top for opts.title (export only)
+function drawGraph(g, canvas, opts) {
+  opts = opts || {};
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.width / dpr, h = canvas.height / dpr;
+  ctx.clearRect(0, 0, w, h);
+  const gs = graphSeries(g);
+  const statsEl = document.querySelector(`.graph-card[data-id="${g.id}"] .stats-readout`);
+  if (opts.background) { ctx.fillStyle = opts.background; ctx.fillRect(0, 0, w, h); }
+  const titleH = opts.title ? GRAPH_TITLE_BAND_H : 0;
+  if (opts.title) {
+    ctx.fillStyle = getCss('--text'); ctx.font = "600 13px 'IBM Plex Sans', sans-serif"; ctx.textAlign = 'left';
+    ctx.fillText(opts.title, 12, 18);
+  }
+  if (!gs || gs.pts.length === 0) {
+    ctx.fillStyle = getCss('--text-faint'); ctx.font = "12px 'IBM Plex Sans', sans-serif"; ctx.textAlign = 'left';
+    ctx.fillText('No data points yet', 12, titleH + (h - titleH) / 2);
+    if (statsEl) statsEl.textContent = '';
+    const fr = document.querySelector(`.graph-card[data-id="${g.id}"] .fit-readout`);
+    if (fr) fr.textContent = '';
+    return;
+  }
+  const { track, pts } = gs;
+  // Extra left/bottom room holds the axis titles (variable + units), drawn
+  // below the tick numbers / to the left of them, always on — an export
+  // additionally reserves titleH at the top for opts.title.
+  const pad = { l: 58, r: 14, t: 12 + titleH, b: 42 };
+  const xExtent = padExtent(extent(pts.map((p) => p.x)));
+  const yExtent = padExtent(extent(pts.map((p) => p.y)));
+  const X = (x) => pad.l + (x - xExtent[0]) / (xExtent[1] - xExtent[0] || 1) * (w - pad.l - pad.r);
+  const Y = (y) => h - pad.b - (y - yExtent[0]) / (yExtent[1] - yExtent[0] || 1) * (h - pad.t - pad.b);
+
+  // grid + axis ticks
+  ctx.strokeStyle = getCss('--border'); ctx.fillStyle = getCss('--text-faint');
+  ctx.font = "10.5px 'IBM Plex Mono', monospace"; ctx.lineWidth = 1;
+  const nTicks = 4;
+  ctx.textAlign = 'center';
+  for (let i = 0; i <= nTicks; i++) {
+    const xv = xExtent[0] + (i / nTicks) * (xExtent[1] - xExtent[0]);
+    const px = X(xv);
+    ctx.beginPath(); ctx.moveTo(px, pad.t); ctx.lineTo(px, h - pad.b); ctx.globalAlpha = 0.35; ctx.stroke(); ctx.globalAlpha = 1;
+    ctx.fillText(compactNum(xv), px, h - pad.b + 14);
+  }
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= nTicks; i++) {
+    const yv = yExtent[0] + (i / nTicks) * (yExtent[1] - yExtent[0]);
+    const py = Y(yv);
+    ctx.fillText(compactNum(yv), pad.l - 8, py + 3);
+  }
+
+  // axis titles — the tracked variable and its unit, e.g. "t (s)" / "y (m)"
+  const xUnit = columnUnitSuffix(track, g.xKey), yUnit = columnUnitSuffix(track, g.yKey);
+  const xLabel = eqSym(track, g.xKey) + (xUnit ? ` (${xUnit})` : '');
+  const yLabel = eqSym(track, g.yKey) + (yUnit ? ` (${yUnit})` : '');
+  ctx.fillStyle = getCss('--text-dim'); ctx.font = "600 11px 'IBM Plex Sans', sans-serif";
+  ctx.textAlign = 'center';
+  ctx.fillText(xLabel, pad.l + (w - pad.l - pad.r) / 2, h - 8);
+  ctx.save();
+  ctx.translate(14, pad.t + (h - pad.t - pad.b) / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(yLabel, 0, 0);
+  ctx.restore();
+  ctx.textAlign = 'left';
+
+  // ROI shading
+  const roi = orderedRoi(g);
+  const roiMin = roi.lo, roiMax = roi.hi, hasRoi = roi.hasRoi;
+  if (hasRoi) {
+    const inRoiPts = pts.filter((p) => p.frame >= roiMin && p.frame <= roiMax);
+    if (inRoiPts.length) {
+      const xr = extent(inRoiPts.map((p) => p.x));
+      ctx.fillStyle = getCss('--teal-tint'); ctx.globalAlpha = 0.6;
+      ctx.fillRect(X(xr[0]), pad.t, X(xr[1]) - X(xr[0]), h - pad.t - pad.b);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // points + connecting line (ordered by frame)
+  const color = track.color;
+  ctx.strokeStyle = color; ctx.globalAlpha = 0.5; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  pts.forEach((p, i) => { const px = X(p.x), py = Y(p.y); if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); });
+  ctx.stroke(); ctx.globalAlpha = 1;
+  pts.forEach((p) => {
+    const inRoi = !hasRoi || (p.frame >= roiMin && p.frame <= roiMax);
+    ctx.fillStyle = inRoi ? color : getCss('--text-faint');
+    ctx.globalAlpha = inRoi ? 1 : 0.4;
+    ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), 3, 0, 7); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  // fit (optional, from "More options") — draws the curve, and when a fit
+  // type is actually selected, also reports its equation on its own line
+  // below the drag-selected average velocity/acceleration.
+  const fitReadoutEl = document.querySelector(`.graph-card[data-id="${g.id}"] .fit-readout`);
+  if (g.fit !== 'none') {
+    const fitPts = pts.filter((p) => !hasRoi || (p.frame >= roiMin && p.frame <= roiMax));
+    if (fitPts.length >= 2) {
+      const xs = fitPts.map((p) => p.x), ys = fitPts.map((p) => p.y);
+      let result = null, label = '';
+      const symY = eqSym(track, g.yKey), symX = eqSym(track, g.xKey);
+      try {
+        if (g.fit === 'linear') { result = polyFit(xs, ys, 1); label = `${symY} = ${sig(result.coeffs[1])}${symX} + ${sig(result.coeffs[0])}`; }
+        else if (g.fit === 'quadratic') { result = polyFit(xs, ys, 2); label = `${symY} = ${sig(result.coeffs[2])}${symX}² + ${sig(result.coeffs[1])}${symX} + ${sig(result.coeffs[0])}`; }
+        else if (g.fit === 'cubic') { result = polyFit(xs, ys, 3); label = `${symY} = ${sig(result.coeffs[3])}${symX}³ + ${sig(result.coeffs[2])}${symX}² + ${sig(result.coeffs[1])}${symX} + ${sig(result.coeffs[0])}`; }
+        else if (g.fit === 'sinusoidal') { result = sinFit(xs, ys, g.seedFreq); label = `${symY} = ${sig(result.A)}·sin(${sig(result.w)}${symX} + ${sig(result.phi)}) + ${sig(result.C)}   (f = ${sig(result.freqHz)})`; }
+        else if (g.fit === 'auto') { result = bestPolyFit(xs, ys, 3); label = result ? `best fit (degree ${result.degree}): ` + polyLabel(result, symX, symY) : 'not enough points'; }
+      } catch (e) { result = null; label = 'fit failed to converge'; }
+      if (result) {
+        ctx.strokeStyle = getCss('--amber'); ctx.lineWidth = 2; ctx.setLineDash([]);
+        ctx.beginPath();
+        const steps = 60;
+        const [fx0, fx1] = extent(xs);
+        for (let i = 0; i <= steps; i++) {
+          const xv = fx0 + (i / steps) * (fx1 - fx0);
+          const yv = result.predict(xv);
+          const px = X(xv), py = Y(yv);
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        if (fitReadoutEl) fitReadoutEl.textContent = 'Fit: ' + label + '   R² = ' + result.r2.toFixed(4);
+      } else if (fitReadoutEl) { fitReadoutEl.textContent = 'Fit: ' + label; }
+    } else if (fitReadoutEl) { fitReadoutEl.textContent = 'Pick a fit — need at least 2 points in range'; }
+  } else if (fitReadoutEl) { fitReadoutEl.textContent = ''; }
+  if (statsEl) statsEl.textContent = regionStatsText(g);
+}
+
+// Average velocity/acceleration for either the whole clip (no selection) or
+// the currently dragged part of the graph — a straightforward secant-slope
+// calculation over the raw track data, independent of whatever curve fit
+// (if any) is drawn above. Reported component follows whatever's plotted:
+// sideways (x/vx/ax), up/down (y/vy/ay), or overall speed/acceleration
+// magnitude otherwise. Drag direction doesn't matter — orderedRoi() sorts
+// the two bounds whenever both are set.
+function regionStatsText(g) {
+  const gs = graphSeries(g);
+  if (!gs || !gs.pts.length) return 'No points marked yet.';
+  const { series, track } = gs;
+  const roi = orderedRoi(g);
+  const hasSelection = roi.hasRoi && Number.isFinite(roi.lo) && Number.isFinite(roi.hi) && roi.lo !== roi.hi;
+  let i0, i1;
+  if (hasSelection) {
+    const idxs = [];
+    series.frames.forEach((f, i) => { if (f >= roi.lo && f <= roi.hi) idxs.push(i); });
+    if (idxs.length < 2) return 'Drag across a bigger part of the graph — need at least 2 marked points.';
+    i0 = idxs[0]; i1 = idxs[idxs.length - 1];
+  } else {
+    if (series.frames.length < 2) return 'Mark at least 2 points to see average velocity and acceleration.';
+    i0 = 0; i1 = series.frames.length - 1;
+  }
+  const dt = series.t[i1] - series.t[i0];
+  if (!(dt > 0)) return 'Mark points at different times to see average velocity and acceleration.';
+  const uV = columnUnitSuffix(track, 'vx'), uA = columnUnitSuffix(track, 'ax');
+  const key = g.yKey;
+  let avgV, avgA, vLabel;
+  if (key === 'y' || key === 'vy' || key === 'ay') {
+    avgV = (series.y[i1] - series.y[i0]) / dt;
+    avgA = (series.vy[i1] - series.vy[i0]) / dt;
+    vLabel = 'Average velocity (up/down)';
+  } else if (key === 'x' || key === 'vx' || key === 'ax') {
+    avgV = (series.x[i1] - series.x[i0]) / dt;
+    avgA = (series.vx[i1] - series.vx[i0]) / dt;
+    vLabel = 'Average velocity (sideways)';
+  } else {
+    const avgVx = (series.x[i1] - series.x[i0]) / dt, avgVy = (series.y[i1] - series.y[i0]) / dt;
+    const avgAx = (series.vx[i1] - series.vx[i0]) / dt, avgAy = (series.vy[i1] - series.vy[i0]) / dt;
+    avgV = Math.hypot(avgVx, avgVy);
+    avgA = Math.hypot(avgAx, avgAy);
+    vLabel = 'Average speed (overall)';
+  }
+  const scope = hasSelection ? 'selected part' : 'whole clip';
+  const hint = hasSelection ? '' : '  ·  drag across the graph to check just part of it';
+  return `${vLabel} (${scope}): ${fmtStat(avgV)} ${uV}   ·   Average acceleration: ${fmtStat(avgA)} ${uA}${hint}`;
+}
+function fmtStat(v) { return Number.isFinite(v) ? v.toFixed(Math.abs(v) < 10 ? 3 : 2) : '—'; }
+function polyLabel(r, symX, symY) {
+  const terms = ['', symX || 'x', (symX || 'x') + '²', (symX || 'x') + '³'];
+  return (symY || 'y') + ' = ' + r.coeffs.map((c, i) => sig(c) + terms[i]).reverse().join(' + ');
+}
+// Fit equations are printed with the actual plotted quantity's symbol (t,
+// x, y, vx, θ, ...) rather than generic "x"/"y" — those are meaningless
+// (and actively misleading) once the graph isn't literally y-vs-x, e.g. a
+// y-vs-t plot mislabeled with generic "y = ...x²..." reads as if x were the
+// independent variable, when it was actually time.
+const EQ_SYMBOL = {
+  point: { t: 't', x: 'x', y: 'y', vx: 'v_x', vy: 'v_y', ax: 'a_x', ay: 'a_y', speed: 'speed' },
+};
+function eqSym(track, key) { return (EQ_SYMBOL[track.kind] && EQ_SYMBOL[track.kind][key]) || key; }
+function padExtent(ext) {
+  const span = ext[1] - ext[0] || Math.abs(ext[0]) || 1;
+  return [ext[0] - span * 0.08, ext[1] + span * 0.08];
+}
+function compactNum(v) { const av = Math.abs(v); if (av !== 0 && (av < 0.001 || av >= 100000)) return v.toExponential(1); return Number(v.toFixed(av < 10 ? 3 : 1)).toString(); }
+function sig(v) { return Number(v.toPrecision(4)).toString(); }
+function getCss(varName) { return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || '#888'; }
+
+/* ======================================================================
+   SECTION: PROJECT SAVE/LOAD + AUTOSAVE + SNAPSHOT
+   ====================================================================== */
+function refreshAll() { renderDataPanel(); renderGraphsPanel(); }
+
+const AUTOSAVE_KEY = 'trackwright_autosave_v1';
+let pendingAutosave = null;
+let _autosaveTimer = null;
+function autosaveSoon() {
+  clearTimeout(_autosaveTimer);
+  _autosaveTimer = setTimeout(() => {
+    try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(serializeProject())); } catch (e) { /* storage may be unavailable — ignore */ }
+  }, 500);
+}
+function loadPendingAutosave() {
+  try {
+    const raw = localStorage.getItem(AUTOSAVE_KEY);
+    if (raw) pendingAutosave = JSON.parse(raw);
+  } catch (e) { pendingAutosave = null; }
+}
+function maybeApplyAutosaveFor(videoName) {
+  if (pendingAutosave && pendingAutosave.videoName && pendingAutosave.videoName === videoName) {
+    applyProject(pendingAutosave, { keepVideoMeta: false });
+    toast('Restored tracking data from your last session with this video.');
+  }
+}
+
+function serializeProject() {
+  return {
+    version: 1, savedAt: new Date().toISOString(),
+    fps: state.fps, videoName: state.videoName, videoDuration: state.videoDuration,
+    autoAdvance: state.autoAdvance,
+    calibration: state.calibration,
+    tracks: state.tracks,
+    graphs: state.graphs.map((g) => ({ ...g, picking: false })),
+  };
+}
+function applyProject(proj, opts = {}) {
+  if (!proj) return;
+  state.calibration = proj.calibration || state.calibration;
+  state.tracks = proj.tracks || [];
+  state.graphs = proj.graphs || [];
+  state.activeTrackId = state.tracks.length ? state.tracks[0].id : null;
+  state.autoAdvance = proj.autoAdvance !== undefined ? proj.autoAdvance : state.autoAdvance;
+  if (opts.keepVideoMeta === false && proj.fps) state.fps = proj.fps;
+  renderCalibrationPanel(); renderTracksPanel(); renderDataPanel(); renderGraphsPanel(); redrawOverlay();
+}
+
+function saveProjectFile() {
+  saveFile((sanitizeFilename(state.videoName || 'trackwright_project') || 'trackwright_project') + '.trackwright.json',
+    JSON.stringify(serializeProject(), null, 2), 'application/json');
+}
+function loadProjectFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const proj = JSON.parse(reader.result);
+      applyProject(proj, { keepVideoMeta: true });
+      toast('Project loaded. Load the matching video to continue tracking.');
+    } catch (e) { toast('That file could not be read as a Trackwright project.'); }
+  };
+  reader.readAsText(file);
+}
+
+async function snapshotFrame() {
+  if (!state.videoLoaded) return;
+  // Composite the current video frame with the live overlay canvas. Both
+  // share the same full container box, but the video image itself only
+  // occupies the letterboxed sub-rectangle described by displayRect — drawing
+  // the <video> at the full canvas size would stretch it and desync it from
+  // the overlay's tracked points, so it's drawn into that same sub-rect.
+  const off = document.createElement('canvas');
+  off.width = overlayCanvas.width; off.height = overlayCanvas.height;
+  const octx2 = off.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const d = state.displayRect;
+  octx2.fillStyle = getCss('--stage-bg') || '#000';
+  octx2.fillRect(0, 0, off.width, off.height);
+  octx2.drawImage(videoEl, d.offX * dpr, d.offY * dpr, d.dispW * dpr, d.dispH * dpr);
+  octx2.drawImage(overlayCanvas, 0, 0);
+  off.toBlob(async (blob) => {
+    if (blob) await saveFile((sanitizeFilename(state.videoName || 'trackwright') || 'trackwright') + '_frame' + state.currentFrame + '.png', blob, 'image/png');
+  }, 'image/png');
+}
+
+/* ======================================================================
+   SECTION: MISC UI WIRING (tabs, theme, toast, mode buttons)
+   ====================================================================== */
+// ---- Popovers ----
+// Opening a panel also sets the matching mode — the whole point of opening
+// Ruler or Track is almost always to go tap the video, so that happens
+// automatically instead of needing a second click. Numbers/Graph fall back
+// to "select" mode (no tapping involved there), which also guards against
+// an accidental mark landing on the video while reviewing.
+const PANEL_DEFAULT_MODE = { calibration: 'calibrate', tracks: 'track', data: 'select', graphs: 'select' };
+const PANEL_NAMES = ['calibration', 'tracks', 'data', 'graphs'];
+
+function openPopover(name) {
+  PANEL_NAMES.forEach((n) => $('popover-' + n).classList.toggle('open', n === name));
+  $('popoverBackdrop').classList.add('show');
+  setMode(PANEL_DEFAULT_MODE[name] || 'select');
+}
+// Closes whichever popover is open without touching the current mode — if
+// Ruler or Track closed itself because you tapped its "tap the video now"
+// button, the mode needs to survive the close so the video is immediately
+// tappable. Explicit closes (the X button, tapping the backdrop) leave the
+// mode as-is too; toggling the same edge button again is the one path that
+// also resets to "select" (see the toolstrip handler below).
+function closeAllPopovers() {
+  PANEL_NAMES.forEach((n) => $('popover-' + n).classList.remove('open'));
+  $('popoverBackdrop').classList.remove('show');
+  syncEdgeButtons();
+}
+function syncEdgeButtons() {
+  const openName = PANEL_NAMES.find((n) => $('popover-' + n).classList.contains('open')) || null;
+  document.querySelectorAll('.edge-btn[data-panel]').forEach((b) => {
+    const modeActive = (b.dataset.panel === 'calibration' && (state.mode === 'calibrate' || state.mode === 'axes'))
+      || (b.dataset.panel === 'tracks' && state.mode === 'track');
+    b.classList.toggle('accent', b.dataset.panel === openName || modeActive);
+  });
+  $('btnMeasureToggle').classList.toggle('accent', state.mode === 'tape');
+}
+document.querySelectorAll('.edge-btn[data-panel]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const name = btn.dataset.panel;
+    const wasOpen = $('popover-' + name).classList.contains('open');
+    closeAllPopovers();
+    if (wasOpen) { setMode('select'); } // toggling the same button off = "I'm done with this"
+    else { openPopover(name); }
+  });
+});
+document.querySelectorAll('.popover-close').forEach((btn) => btn.addEventListener('click', closeAllPopovers));
+$('popoverBackdrop').addEventListener('click', closeAllPopovers);
+$('btnMeasureToggle').addEventListener('click', () => {
+  const wasActive = state.mode === 'tape';
+  closeAllPopovers();
+  setMode(wasActive ? 'select' : 'tape');
+});
+
+// ---- Theme ----
+function applyStoredTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem('trackwright_theme'); } catch (e) {}
+  if (saved === 'dark' || saved === 'light') document.documentElement.setAttribute('data-theme', saved);
+  updateThemeIcon();
+}
+function updateThemeIcon() {
+  const dark = isDark();
+  $('themeIcon').innerHTML = dark
+    ? '<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" fill="currentColor" stroke="none"/>'
+    : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+}
+$('themeToggle').addEventListener('click', () => {
+  const next = isDark() ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('trackwright_theme', next); } catch (e) {}
+  updateThemeIcon();
+  redrawOverlay(); renderGraphsPanel();
+});
+
+// ---- Video loading ----
+$('btnLoadVideo').addEventListener('click', () => $('videoFileInput').click());
+$('btnLoadVideo2').addEventListener('click', () => $('videoFileInput').click());
+$('videoFileInput').addEventListener('change', (e) => { if (e.target.files[0]) handleVideoFile(e.target.files[0]); });
+$('btnLoadSample').addEventListener('click', () => loadSampleVideo());
+
+// ---- fps ----
+$('fpsSelect').addEventListener('change', (e) => {
+  $('fpsCustom').style.display = e.target.value === 'custom' ? 'inline-block' : 'none';
+  state.fps = getFps();
+  if (state.videoLoaded) { state.frameCount = Math.max(1, Math.round(state.videoDuration * state.fps)); $('scrub').max = String(state.frameCount - 1); updateTransportUI(); }
+  refreshAll(); autosaveSoon();
+});
+$('fpsCustom').addEventListener('input', () => {
+  state.fps = getFps();
+  if (state.videoLoaded) { state.frameCount = Math.max(1, Math.round(state.videoDuration * state.fps)); $('scrub').max = String(state.frameCount - 1); updateTransportUI(); }
+  refreshAll(); autosaveSoon();
+});
+
+// ---- Transport ----
+$('btnFrameBack').addEventListener('click', () => stepFrame(-1));
+$('btnFrameFwd').addEventListener('click', () => stepFrame(1));
+$('btnPlay').addEventListener('click', () => togglePlay());
+$('scrub').addEventListener('input', (e) => { seekToFrame(Number(e.target.value)).then(() => { updateTransportUI(); redrawOverlay(); }); });
+$('speedSelect').addEventListener('change', (e) => { state.playbackSpeed = parseFloat(e.target.value); if (state.playing) videoEl.playbackRate = state.playbackSpeed; });
+
+// ---- Snapshot / project ----
+$('btnSnapshot').addEventListener('click', snapshotFrame);
+$('btnSaveProject').addEventListener('click', saveProjectFile);
+$('btnLoadProject').addEventListener('click', () => $('projectFileInput').click());
+$('projectFileInput').addEventListener('change', (e) => { if (e.target.files[0]) loadProjectFile(e.target.files[0]); });
+
+// ---- Graph "open larger" modal ----
+$('graphModalClose').addEventListener('click', closeGraphModal);
+$('graphModal').addEventListener('click', (e) => { if (e.target.id === 'graphModal') closeGraphModal(); });
+$('graphModalSave').addEventListener('click', () => {
+  const g = state.graphs.find((x) => x.id === expandedGraphId);
+  if (g) exportGraphImage($('graphModalCanvas'), g);
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && expandedGraphId) closeGraphModal(); });
+
+// react to OS theme flips while the app is open with no manual override
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (!document.documentElement.getAttribute('data-theme')) { updateThemeIcon(); redrawOverlay(); renderGraphsPanel(); }
+  });
+}
+
+/* ======================================================================
+   SECTION: INIT
+   ====================================================================== */
+applyStoredTheme();
+loadPendingAutosave();
+renderCalibrationPanel();
+renderTracksPanel();
+renderDataPanel();
+renderGraphsPanel();
+setMode('select');
+updateTransportUI();
+
+checkSampleVideoAvailable().then((available) => {
+  if (!available) return;
+  $('sampleVideoRow').style.display = 'block';
+  if (SAMPLE_VIDEO_AUTOLOAD && !state.videoLoaded) loadSampleVideo({ silent: true });
+});
+
+</script>
+</body>
+</html>
